@@ -1,2 +1,7 @@
 # Data Enums
-Python enumerations alternative with attached data
+
+An alternative to the built-in Python `enum` implementation. Data enums allow you to:
+
+- Associate data with enum members
+- Add secondary unique keys
+- Lookup enum members by secondary unique keys
