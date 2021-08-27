@@ -2,7 +2,7 @@
 
 An alternative to the built-in Python `enum` implementation. Data enums allow you to:
 
-- Associate data with enum members
+- Associate data with enum members without using tuple-based initialization
 - Add secondary unique keys
 - Lookup enum members by secondary unique keys
 
@@ -17,13 +17,13 @@ Minimal usage:
     from data_enum import DataEnum
 
     class Currency(DataEnum):
-       data_attribute_names = ('symbol', 'name', 'plural_name')
+       data_attribute_names = ('symbol', 'name')
 
     # Call the register function only once
     Currency.register([
-        Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars'),
-        Currency('USD', symbol='$', name='United States dollar', plural_name='United States dollars'),
-        Currency('EUR', symbol='€', name='Euro', plural_name='Euros'),
+        Currency('CAD', symbol='$', name='Canadian dollar'),
+        Currency('USD', symbol='$', name='United States dollar'),
+        Currency('EUR', symbol='€', name='Euro'),
     ])
 
 Access the members by attribute (if the member value is an attribute-name-friendly string):
@@ -54,13 +54,13 @@ Enforce unique secondary attributes:
 
     class Currency(DataEnum):
         # Use a tuple with the second value as True for unique keys
-        data_attribute_names = (('symbol', True), 'plural_name')
+        data_attribute_names = (('symbol', True), 'name')
 
     # Throws ValueError
     Currency.register([
-        Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars'),
-        Currency('USD', symbol='$', name='United States dollar', plural_name='United States dollars'),
-        Currency('EUR', symbol='€', name='Euro', plural_name='Euros'),
+        Currency('CAD', symbol='$', name='Canadian dollar'),
+        Currency('USD', symbol='$', name='United States dollar'),
+        Currency('EUR', symbol='€', name='Euro'),
     ])
 
 Look up members by unique secondary attributes:
