@@ -70,8 +70,8 @@ Look up members by unique secondary attributes:
 
 Look up with members with defaults:
 
-    Currency.get('AAA', Currency.USD)  # returns Currency.USD
-    Currency.get('AAA', default=Currency.USD)  # returns Currency.USD
+    Currency.get('ZZZ', Currency.USD)  # returns Currency.USD
+    Currency.get('ZZZ', default=Currency.USD)  # returns Currency.USD
     Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
 
 Use integers as values:
