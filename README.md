@@ -85,12 +85,12 @@ Use integers as values:
 
     # Call the register function only once
     Door.register([
-        Door(1, name='Door #1'),
-        Door(2, name='Door #2'),
-        Door(3, name='Door #3'),
+        Door(1, description='Door #1'),
+        Door(2, description='Door #2'),
+        Door(3, description='Door #3'),
     ])
 
-    d2 = Door(2)  # returns Door(2, name='Door #2')
+    d2 = Door(2)  # returns Door(2, description='Door #2')
 
     int(d2)  # returns 2
 
