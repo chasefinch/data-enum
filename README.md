@@ -1,6 +1,10 @@
 # Data Enums
 
-An alternative to the built-in Python `enum` implementation. Data enums allow you to:
+![Python 2.7 & 3.5+](https://img.shields.io/badge/python-2.7%20%7C%203.5%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=main)](https://travis-ci.com/chasefinch/data-enum) ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+
+An alternative to the built-in Python `enum` implementation. Tested in Python 3.5 and above, but also supports Python 2.7.
+
+Data enums allow you to:
 
 - Associate data with enum members without using tuple-based initialization
 - Add secondary unique keys
