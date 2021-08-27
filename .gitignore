@@ -1,0 +1,7 @@
+
+*.pyc
+.coverage
+py2/
+data_enum.egg-info
+build/
+prof/
