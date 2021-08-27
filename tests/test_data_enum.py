@@ -9,7 +9,7 @@ from builtins import str  # noqa
 import pytest
 
 # Data Enum
-from data_enum import ConfigurationError, DataEnum, MemberDoesNotExist
+from data_enum import ConfigurationError, DataEnum, MemberDoesNotExistError
 
 
 class TestLayout:
@@ -111,7 +111,7 @@ class TestLayout:
             self.Currency.get('USD', self.Currency.USD, hello='there')
 
         # Member not found
-        with pytest.raises(MemberDoesNotExist):
+        with pytest.raises(MemberDoesNotExistError):
             self.Currency.get('AAA')
 
     def test_init(self):

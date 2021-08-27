@@ -66,7 +66,7 @@ Enforce unique secondary attributes:
 Look up members by unique secondary attributes:
 
     Currency.get(symbol='€')  # returns Currency.EUR
-    Currency.get(symbol='&')  # throws MemberDoesNotExist exception
+    Currency.get(symbol='&')  # throws MemberDoesNotExistError exception
 
 Look up with members with defaults:
 

@@ -14,7 +14,7 @@ class ConfigurationError(Exception):
     pass
 
 
-class MemberDoesNotExist(Exception):
+class MemberDoesNotExistError(Exception):
     pass
 
 
@@ -122,7 +122,7 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
 
         """Make sure there are unique values for attributes which have been
         marked unique, including 'value'."""
-        unique_attribute_names = ('value', *cls._data_attribute_names_flat_unique)
+        unique_attribute_names = ('value',) + cls._data_attribute_names_flat_unique
         for attr in unique_attribute_names:
             for value, grouper in groupby(members, key=lambda m: getattr(m, attr)):
                 # Group by the value of the attribute
@@ -182,7 +182,7 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
                 assert has_default
             except AssertionError:
                 # No default available
-                raise MemberDoesNotExist()
+                raise MemberDoesNotExistError()
 
             # Return the passed-in default
             return default
