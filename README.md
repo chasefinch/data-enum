@@ -28,27 +28,27 @@ Minimal usage:
 
 Access the members by attribute (if the member value is an attribute-name-friendly string):
   
-  Currency.USD
-  Currency.CAD
-  Currency.EUR
+	Currency.USD
+	Currency.CAD
+	Currency.EUR
 
 Access the members by value:
 
-  Currency.get('USD')
-  Currency.get('CAD')
-  Currency.get('EUR')
+	Currency.get('USD')
+	Currency.get('CAD')
+	Currency.get('EUR')
 
 Access the attached data:
 
-  print(Currency.USD.name)  # prints 'United States dollar'
-  print(Currency.EUR.symbol)  # prints '€'
+	print(Currency.USD.name)  # prints 'United States dollar'
+	print(Currency.EUR.symbol)  # prints '€'
 
-  print(Currency.USD)  # prints 'USD'
+	print(Currency.USD)  # prints 'USD'
 
 Compare directly:
 
-  Currency.USD == Currency.CAD  # returns False
-  Currency.EUR == Currency.EUR  # returns True
+	Currency.USD == Currency.CAD  # returns False
+	Currency.EUR == Currency.EUR  # returns True
 
 Enforce unique secondary attributes:
 
@@ -70,9 +70,9 @@ Look up members by unique secondary attributes:
 
 Look up with members with defaults:
 
-  Currency.get('AAA', Currency.USD)  # returns Currency.USD
-  Currency.get('AAA', default=Currency.USD)  # returns Currency.USD
-  Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
+	Currency.get('AAA', Currency.USD)  # returns Currency.USD
+	Currency.get('AAA', default=Currency.USD)  # returns Currency.USD
+	Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
 
 Use integers as values:
 
