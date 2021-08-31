@@ -15,20 +15,18 @@ from data_enum import ConfigurationError, DataEnum, MemberDoesNotExistError
 class TestLayout:
     def simple_setup(self):
         class Currency(DataEnum):
-            data_attribute_names = ('symbol', 'name', 'plural_name')
+            data_attributes = ('symbol', 'name', 'plural_name')
 
-        Currency.register([
-            Currency('AUD', symbol='$', name='Australian dollar', plural_name='Australian dollars'),
-            Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars'),
-            Currency('EUR', symbol='€', name='Euro', plural_name='Euros'),
-            Currency('INR', symbol='₹', name='Indian rupee', plural_name='Indian rupees'),
-            Currency('JPY', symbol='¥', name='Japanese yen', plural_name='Japanese yen'),
-            Currency('GBP', symbol='£', name='Pound sterling', plural_name='Pounds sterling'),
-            Currency('MXN', symbol='$', name='Mexican peso', plural_name='Mexican pesos'),
-            Currency('NZD', symbol='$', name='New Zealand dollar', plural_name='New Zealand dollars'),
-            Currency('SGD', symbol='$', name='Singapore dollar', plural_name='Singapore dollars'),
-            Currency('USD', symbol='$', name='United States dollar', plural_name='United States dollars'),
-        ])
+        Currency.AUD = Currency('AUD', symbol='$', name='Australian dollar', plural_name='Australian dollars')
+        Currency.CAD = Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
+        Currency.EUR = Currency('EUR', symbol='€', name='Euro', plural_name='Euros')
+        Currency.INR = Currency('INR', symbol='₹', name='Indian rupee', plural_name='Indian rupees')
+        Currency.JPY = Currency('JPY', symbol='¥', name='Japanese yen', plural_name='Japanese yen')
+        Currency.GBP = Currency('GBP', symbol='£', name='Pound sterling', plural_name='Pounds sterling')
+        Currency.MXN = Currency('MXN', symbol='$', name='Mexican peso', plural_name='Mexican pesos')
+        Currency.NZD = Currency('NZD', symbol='$', name='New Zealand dollar', plural_name='New Zealand dollars')
+        Currency.SGD = Currency('SGD', symbol='$', name='Singapore dollar', plural_name='Singapore dollars')
+        Currency.USD = Currency('USD', symbol='$', name='United States dollar', plural_name='United States dollars')
 
         self.Currency = Currency
 
@@ -36,54 +34,39 @@ class TestLayout:
         self.simple_setup()
 
         assert self.Currency.AUD == self.Currency.get('AUD')
-        assert self.Currency.AUD == self.Currency.get(value='AUD')
-        assert self.Currency.AUD == self.Currency.get(value='YYY', default=self.Currency.AUD)
+        assert self.Currency.AUD == self.Currency.get('YYY', default=self.Currency.AUD)
 
-    def test_attribute_names_type_error(self):
+    def test_attributes_type_error(self):
         with pytest.raises(ConfigurationError):
             class TestEnum(DataEnum):
-                data_attribute_names = 'value'
+                data_attributes = 'value'
 
-    def test_attribute_name_error_1(self):
+    def test_attributes_error_1(self):
         with pytest.raises(ConfigurationError):
             class TestEnum(DataEnum):
-                data_attribute_names = ('value',)
+                primary_attribute = 'id'
+                data_attributes = ('id',)
 
-    def test_attribute_name_error_2(self):
+    def test_attributes_error_2(self):
         with pytest.raises(ConfigurationError):
             class TestEnum(DataEnum):
-                data_attribute_names = ('_hidden',)
+                data_attributes = ('_hidden',)
 
-    def test_nested_attribute_names(self):
+    def test_nested_attributes(self):
         class Currency(DataEnum):
-            data_attribute_names = ('symbol', ('name', True), 'plural_name')
+            data_attributes = ('symbol', ('name', True), 'plural_name')
 
-        Currency.register([
-            Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars'),
-            Currency('USD', symbol='$', name='United States dollar', plural_name='United States dollars'),
-        ])
-
-    def test_duplicate_registration_error(self):
-        class Currency(DataEnum):
-            data_attribute_names = ('symbol', 'name', 'plural_name')
-
-        cad = Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
-        usd = Currency('USD', symbol='$', name='United States dollar', plural_name='United States dollars')
-
-        Currency.register([cad])
-
-        with pytest.raises(ConfigurationError):
-            Currency.register([usd])
+        Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
+        Currency('USD', symbol='$', name='United States dollar', plural_name='United States dollars')
 
     def test_duplicate_element_error(self):
         class Currency(DataEnum):
-            data_attribute_names = ('symbol', 'name', 'plural_name')
+            data_attributes = ('symbol', 'name', 'plural_name')
 
-        cad1 = Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
-        cad2 = Currency('CAD', symbol='$', name='United States dollar', plural_name='United States dollars')
-
+        Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
+        
         with pytest.raises(ValueError):
-            Currency.register([cad1, cad2])
+            Currency('CAD', symbol='$', name='United States dollar', plural_name='United States dollars')
 
     def test_get(self):
         self.simple_setup()
@@ -96,12 +79,12 @@ class TestLayout:
         usd = self.Currency.get('AAA', default=self.Currency.USD)
         assert usd == self.Currency.USD
 
-        cad = self.Currency.get(value='AAA', default=self.Currency.CAD)
-        assert cad == self.Currency.CAD
-
-        # Invalid keyword
+        # Invalid keywords
         with pytest.raises(AttributeError):
             self.Currency.get(three_letters='AAA')
+
+        with pytest.raises(AttributeError):
+            self.Currency.get(_id_='abc')
 
         # Invalid keyword count
         with pytest.raises(TypeError):
@@ -116,33 +99,27 @@ class TestLayout:
 
     def test_init(self):
         class Currency1(DataEnum):
-            data_attribute_names = ('symbol', 'name', 'plural_name')
+            data_attributes = ('symbol', 'name', 'plural_name')
 
-        cad1 = Currency1('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
-        usd1 = Currency1('USD', symbol='$', name='United States dollar', plural_name='United States dollars')
-
-        Currency1.register([usd1, cad1])
-
-        # Prevent initialization after registration
-        with pytest.raises(ConfigurationError):
-            Currency1('MXN', symbol='$', name='Mexican peso', plural_name='Mexican pesos')
+        Currency1('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
+        Currency1('USD', symbol='$', name='United States dollar', plural_name='United States dollars')
 
         # Prevent initialization with no arguments
         class TestEnum(DataEnum):
-            data_attribute_names = ('description',)
+            data_attributes = ('description',)
 
         with pytest.raises(TypeError):
             TestEnum()
 
         # Positional initialization
         class Currency2(DataEnum):
-            data_attribute_names = ('symbol', 'name', 'plural_name')
+            data_attributes = ('symbol', 'name', 'plural_name')
 
-        cad2 = Currency2('CAD', '$', 'Canadian dollar', 'Canadian dollars')
-        usd2 = Currency2('USD', '$', 'United States dollar', plural_name='United States dollars')
+        Currency2.CAD = Currency2('CAD', '$', 'Canadian dollar', 'Canadian dollars')
+        Currency2.USD = Currency2('USD', '$', 'United States dollar', plural_name='United States dollars')
 
-        assert cad2.plural_name == 'Canadian dollars'
-        assert usd2.plural_name == 'United States dollars'
+        assert Currency2.CAD.plural_name == 'Canadian dollars'
+        assert Currency2.USD.plural_name == 'United States dollars'
 
         # Missing attribute
         with pytest.raises(TypeError):
@@ -157,14 +134,13 @@ class TestLayout:
             Currency2('MXN', symbol='$', name='Mexican peso', plural_name='United States dollars', count=10)
 
         class Currency3(DataEnum):
-            data_attribute_names = ('symbol', ('name', True), 'plural_name')
+            data_attributes = ('symbol', ('name', True), 'plural_name')
 
-        cad3 = Currency3('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
-        usd3 = Currency3('USD', symbol='$', name='Canadian dollar', plural_name='United States dollars')
-
+        Currency3('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
+        
         # Duplicate values for unique attribute
         with pytest.raises(ValueError):
-            Currency3.register([cad3, usd3])
+            Currency3('USD', symbol='$', name='Canadian dollar', plural_name='United States dollars')
 
     def test_other(self):
         self.simple_setup()
@@ -173,24 +149,33 @@ class TestLayout:
         assert self.Currency.USD != 'bitcoin'
 
         class TestStringEnum(DataEnum):
-            data_attribute_names = ('name',)
+            data_attributes = ('name', 'age')
 
-        TestStringEnum.register([
-            TestStringEnum('person A', 'Susan'),
-        ])
+        TestStringEnum('person A', 'Susan', 13)
 
         susan = TestStringEnum.get('person A')
 
         assert str(susan) == 'person A'
         assert susan.__unicode__() == 'person A'
+        assert repr(susan) == "TestStringEnum('person A', name='Susan', age=13)"
 
         class TestIntEnum(DataEnum):
-            data_attribute_names = ('name',)
+            data_attributes = ('name',)
 
-        TestIntEnum.register([
-            TestIntEnum(1, 'Linda'),
-        ])
+        TestIntEnum(1, 'Linda')
 
         linda = TestIntEnum.get(1)
 
         assert int(linda) == 1
+        assert repr(linda) == "TestIntEnum(1, name='Linda')"
+
+        class TestAutoEnum(DataEnum):
+            data_attributes = ('name',)
+
+        TestAutoEnum(name='Sharon')
+
+        sharon = TestAutoEnum.get(0)
+
+        assert int(sharon) == 0
+        assert repr(sharon) == "TestAutoEnum(0, name='Sharon')"
+

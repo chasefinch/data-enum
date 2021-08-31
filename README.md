@@ -21,26 +21,47 @@ Minimal usage:
     from data_enum import DataEnum
 
     class Currency(DataEnum):
-       data_attribute_names = ('symbol', 'name')
+        data_attributes = ('symbol', 'name')
 
-    # Call the register function only once
-    Currency.register([
-        Currency('CAD', symbol='$', name='Canadian dollar'),
-        Currency('USD', symbol='$', name='United States dollar'),
-        Currency('EUR', symbol='€', name='Euro'),
-    ])
-
-Access the members by attribute (if the member value is an attribute-name-friendly string):
-  
-    Currency.USD
-    Currency.CAD
-    Currency.EUR
+    Currency('CAD', symbol='$', name='Canadian dollar')
+    Currency('USD', symbol='$', name='United States dollar')
+    Currency('EUR', symbol='€', name='Euro')
 
 Access the members by value:
 
     Currency.get('USD')
     Currency.get('CAD')
     Currency.get('EUR')
+
+Store the members as attributes:
+  
+    class Currency(DataEnum):
+        data_attributes = ('symbol', 'name')
+
+    Currency.CAD = Currency('CAD', symbol='$', name='Canadian dollar')
+    Currency.USD = Currency('USD', symbol='$', name='United States dollar')
+    Currency.EUR = Currency('EUR', symbol='€', name='Euro')
+
+Use a custom attribute as the primary ID:
+
+    class Currency(DataEnum):
+        primary_attribute = 'code'
+        data_attributes = ('symbol', 'name')
+
+    Currency('CAD', symbol='$', name='Canadian dollar')
+    Currency('USD', symbol='$', name='United States dollar')
+    Currency('EUR', symbol='€', name='Euro')
+
+Or, skip primary IDs altogether for a pure enumeration:
+  
+    from data_enum import DataEnum
+
+    class Currency(DataEnum):
+        data_attributes = ('symbol', 'name')
+
+    Currency.CAD = Currency(symbol='$', name='Canadian dollar')
+    Currency.USD = Currency(symbol='$', name='United States dollar')
+    Currency.EUR = Currency(symbol='€', name='Euro')
 
 Access the attached data:
 
@@ -58,14 +79,11 @@ Enforce unique secondary attributes:
 
     class Currency(DataEnum):
         # Use a tuple with the second value as True for unique keys
-        data_attribute_names = (('symbol', True), 'name')
+        data_attributes = (('symbol', True), 'name')
 
     # Throws ValueError
-    Currency.register([
-        Currency('CAD', symbol='$', name='Canadian dollar'),
-        Currency('USD', symbol='$', name='United States dollar'),
-        Currency('EUR', symbol='€', name='Euro'),
-    ])
+    Currency('CAD', symbol='$', name='Canadian dollar')
+    Currency('USD', symbol='$', name='United States dollar')
 
 Look up members by unique secondary attributes:
 
@@ -81,14 +99,11 @@ Look up with members with defaults:
 Use integers as values:
 
     class Door(DataEnum):
-        data_attribute_names = ('description',)
+        data_attributes = ('description',)
 
-    # Call the register function only once
-    Door.register([
-        Door(1, description='Door #1'),
-        Door(2, description='Door #2'),
-        Door(3, description='Door #3'),
-    ])
+    Door(1, description='Door #1')
+    Door(2, description='Door #2')
+    Door(3, description='Door #3')
 
     d2 = Door(2)  # returns Door(2, description='Door #2')
 
