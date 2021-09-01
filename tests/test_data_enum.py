@@ -2,6 +2,7 @@
 from __future__ import absolute_import, unicode_literals
 
 # Standard Library
+import sys
 from builtins import bytes  # noqa
 from builtins import str  # noqa
 
@@ -157,7 +158,11 @@ class TestLayout:
 
         assert str(susan) == 'person A'
         assert susan.__unicode__() == 'person A'
-        assert repr(susan) == "TestStringEnum('person A', name='Susan', age=13)"
+
+        if sys.version_info >= (3, 0):
+            assert repr(susan) == "TestStringEnum('person A', name='Susan', age=13)"
+        else:
+            assert repr(susan) == "TestStringEnum(u'person A', name=u'Susan', age=13)"
 
         class TestIntEnum(DataEnum):
             data_attributes = ('name',)
