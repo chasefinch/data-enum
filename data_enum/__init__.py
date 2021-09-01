@@ -183,7 +183,7 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
                 member_id = len(self.members)
                 self.is_auto = True
 
-        setattr(self, type(self).primary_attribute, member_id)
+        setattr(self, self._primary_attr, member_id)
 
         num_args = len(args_list)
 

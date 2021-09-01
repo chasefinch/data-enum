@@ -7,8 +7,11 @@ An alternative to the built-in Python `enum` implementation. Tested in Python 3.
 Data enums allow you to:
 
 - Associate data with enum members without using tuple-based initialization
-- Add secondary unique keys
-- Lookup enum members by secondary unique keys
+- Use an intuitive initialization syntax to define members
+- Define pure enums without using `auto()`
+- Define value-based enums without 
+- Define secondary unique keys & use them to look up enum members
+- Use classmethod syntax (`.get(…)`) to look up members, instead of using initializers
 
 ## Usage
 
@@ -51,6 +54,19 @@ Use a custom attribute as the primary ID:
     Currency('CAD', symbol='$', name='Canadian dollar')
     Currency('USD', symbol='$', name='United States dollar')
     Currency('EUR', symbol='€', name='Euro')
+
+Use integers as primary IDs:
+
+    class Door(DataEnum):
+        data_attributes = ('description',)
+
+    Door(1, description='Door #1')
+    Door(2, description='Door #2')
+    Door(3, description='Door #3')
+
+    d2 = Door(2)  # returns Door(2, description='Door #2')
+
+    int(d2)  # returns 2
 
 Or, skip primary IDs altogether for a pure enumeration:
   
@@ -95,19 +111,6 @@ Look up with members with defaults:
     Currency.get('ZZZ', Currency.USD)  # returns Currency.USD
     Currency.get('ZZZ', default=Currency.USD)  # returns Currency.USD
     Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
-
-Use integers as values:
-
-    class Door(DataEnum):
-        data_attributes = ('description',)
-
-    Door(1, description='Door #1')
-    Door(2, description='Door #2')
-    Door(3, description='Door #3')
-
-    d2 = Door(2)  # returns Door(2, description='Door #2')
-
-    int(d2)  # returns 2
 
 ## Testing, etc.
 

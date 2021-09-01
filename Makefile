@@ -14,3 +14,5 @@ test:
 
 develop:
 	pip install -r requirements/develop.txt
+
+.PHONY: default format lint test develop
