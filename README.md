@@ -9,7 +9,7 @@ Data enums allow you to:
 - Associate data with enum members without using tuple-based initialization
 - Use an intuitive initialization syntax to define members
 - Define pure enums without using `auto()`
-- Define value-based enums without 
+- Define value-based enums without storing them as class attributes
 - Define secondary unique keys & use them to look up enum members
 - Use classmethod syntax (`.get(…)`) to look up members, instead of using initializers
 
