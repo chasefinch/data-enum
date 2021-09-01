@@ -159,11 +159,6 @@ class TestLayout:
         assert str(susan) == 'person A'
         assert susan.__unicode__() == 'person A'
 
-        if sys.version_info >= (3, 0):
-            assert repr(susan) == "TestStringEnum('person A', name='Susan', age=13)"
-        else:
-            assert repr(susan) == "TestStringEnum(u'person A', name=u'Susan', age=13)"
-
         class TestIntEnum(DataEnum):
             data_attributes = ('name',)
 
@@ -172,7 +167,6 @@ class TestLayout:
         linda = TestIntEnum.get(1)
 
         assert int(linda) == 1
-        assert repr(linda) == "TestIntEnum(1, name='Linda')"
 
         class TestAutoEnum(DataEnum):
             data_attributes = ('name',)
@@ -180,7 +174,19 @@ class TestLayout:
         sharon = TestAutoEnum(name='Sharon')
 
         assert int(sharon) == 0
-        assert repr(sharon) == "TestAutoEnum(0, name='Sharon')"
 
         with pytest.raises(MemberDoesNotExistError):
             TestAutoEnum.get(0)
+
+        if sys.version_info >= (3, 0):
+            repr_susan = "TestStringEnum('person A', name='Susan', age=13)"
+            repr_linda = "TestIntEnum(1, name='Linda')"
+            repr_sharon = "TestAutoEnum(0, name='Sharon')"
+        else:
+            repr_susan = "TestStringEnum(u'person A', name=u'Susan', age=13)"
+            repr_linda = "TestIntEnum(1, name=u'Linda')"
+            repr_sharon = "TestAutoEnum(0, name=u'Sharon')"
+
+        assert repr(susan) == repr_susan
+        assert repr(linda) == repr_linda
+        assert repr(sharon) == repr_sharon
