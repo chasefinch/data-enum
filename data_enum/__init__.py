@@ -103,6 +103,7 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
     def get(cls, *args, **kwargs):
         """Look up a member of the enumeration."""
         has_default = False
+        should_bail_if_auto = False
 
         if len(args) == 2:
             # Two positional arguments; the second one is the default
@@ -124,6 +125,10 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
         if len(args) == 1 and not kwargs:
             # Look up by primary key
             attr = cls.primary_attribute
+            if attr == DEFAULT_PRIMARY_ATTRIBUTE:
+                # Don't expose the default ID if it's auto generated
+                should_bail_if_auto = True
+
             value = args[0]
         elif len(kwargs) == 1 and not args:
             # Look up by attribute or id
@@ -139,7 +144,7 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
         member_dict = cls._get_member_dict_by_attr(attr)
         try:
             # Return the member
-            return member_dict[value]
+            member = member_dict[value]
         except KeyError:
             if not has_default:
                 # No default available
@@ -147,6 +152,12 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
 
             # Return the passed-in default
             return default
+
+        if member.is_auto and should_bail_if_auto:
+            # Don't expose the default ID if it's auto generated
+            raise MemberDoesNotExistError()
+
+        return member
 
     @property
     def _primary_attr(self):
@@ -157,8 +168,9 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
         return getattr(self, self._primary_attr)
 
     def __init__(self, *args, **kwargs):
-        args_list = list(args)
+        self.is_auto = False
 
+        args_list = list(args)
         if args_list:
             # The first argument is the primary key
             member_id = args_list.pop(0)
@@ -169,6 +181,7 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
             except KeyError:
                 # Auto-generate a primary key
                 member_id = len(self.members)
+                self.is_auto = True
 
         setattr(self, type(self).primary_attribute, member_id)
 

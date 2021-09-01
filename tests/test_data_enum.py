@@ -64,7 +64,7 @@ class TestLayout:
             data_attributes = ('symbol', 'name', 'plural_name')
 
         Currency('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
-        
+
         with pytest.raises(ValueError):
             Currency('CAD', symbol='$', name='United States dollar', plural_name='United States dollars')
 
@@ -137,7 +137,7 @@ class TestLayout:
             data_attributes = ('symbol', ('name', True), 'plural_name')
 
         Currency3('CAD', symbol='$', name='Canadian dollar', plural_name='Canadian dollars')
-        
+
         # Duplicate values for unique attribute
         with pytest.raises(ValueError):
             Currency3('USD', symbol='$', name='Canadian dollar', plural_name='United States dollars')
@@ -172,10 +172,10 @@ class TestLayout:
         class TestAutoEnum(DataEnum):
             data_attributes = ('name',)
 
-        TestAutoEnum(name='Sharon')
-
-        sharon = TestAutoEnum.get(0)
+        sharon = TestAutoEnum(name='Sharon')
 
         assert int(sharon) == 0
         assert repr(sharon) == "TestAutoEnum(0, name='Sharon')"
 
+        with pytest.raises(MemberDoesNotExistError):
+            TestAutoEnum.get(0)
