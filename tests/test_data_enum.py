@@ -2,6 +2,7 @@
 from __future__ import absolute_import, unicode_literals
 
 # Standard Library
+import pickle
 import sys
 from builtins import bytes  # noqa
 from builtins import str  # noqa
@@ -11,6 +12,10 @@ import pytest
 
 # Data Enum
 from data_enum import ConfigurationError, DataEnum, MemberDoesNotExistError
+
+
+class IntEnum(DataEnum):
+    data_attributes = ('name',)
 
 
 class TestLayout:
@@ -159,12 +164,9 @@ class TestLayout:
         assert str(susan) == 'person A'
         assert susan.__unicode__() == 'person A'
 
-        class TestIntEnum(DataEnum):
-            data_attributes = ('name',)
+        IntEnum(1, 'Linda')
 
-        TestIntEnum(1, 'Linda')
-
-        linda = TestIntEnum.get(1)
+        linda = IntEnum.get(1)
 
         assert int(linda) == 1
 
@@ -180,13 +182,15 @@ class TestLayout:
 
         if sys.version_info >= (3, 0):
             repr_susan = "TestStringEnum('person A', name='Susan', age=13)"
-            repr_linda = "TestIntEnum(1, name='Linda')"
+            repr_linda = "IntEnum(1, name='Linda')"
             repr_sharon = "TestAutoEnum(0, name='Sharon')"
         else:
             repr_susan = "TestStringEnum(u'person A', name=u'Susan', age=13)"
-            repr_linda = "TestIntEnum(1, name=u'Linda')"
+            repr_linda = "IntEnum(1, name=u'Linda')"
             repr_sharon = "TestAutoEnum(0, name=u'Sharon')"
 
         assert repr(susan) == repr_susan
         assert repr(linda) == repr_linda
         assert repr(sharon) == repr_sharon
+
+        assert linda == pickle.loads(pickle.dumps(linda))
