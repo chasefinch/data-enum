@@ -48,7 +48,7 @@ class DataEnumType(type):
             raise ConfigurationError('Unexpected data attribute prefix "_"')
 
         # Set this here so that each type definition gets their own set.
-        cls.members = set()
+        cls.members = []
 
     def _get_member_dict_by_attr(cls, attr):
         """Return the members as a dictionary.
@@ -229,7 +229,7 @@ class DataEnum(six.with_metaclass(DataEnumType, object)):
                 if value == getattr(member, attr):
                     raise ValueError('Duplicate enum value "{}" for unique attribute "{}"'.format(value, attr))
 
-        self.members.add(self)
+        self.members.append(self)
 
     def __eq__(self, other):
         try:
