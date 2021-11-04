@@ -1,8 +1,8 @@
 # Data Enums
 
-![Python 2.7 & 3.5+](https://img.shields.io/badge/python-2.7%20%7C%203.5%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=main)](https://travis-ci.com/chasefinch/data-enum) ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![Python 3.6+](https://img.shields.io/badge/python-3.6%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=main)](https://travis-ci.com/chasefinch/data-enum) ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
-An alternative to the built-in Python `enum` implementation. Tested in Python 3.5 and above, but also supports Python 2.7.
+An alternative to the built-in Python `enum` implementation. Tested in Python 3.6 and above.
 
 Data enums allow you to:
 
