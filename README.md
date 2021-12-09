@@ -37,7 +37,7 @@ Access the members by value:
     Currency.get('EUR')
 
 Store the members as attributes:
-  
+
     class Currency(DataEnum):
         data_attributes = ('symbol', 'name')
 
@@ -69,7 +69,7 @@ Use integers as primary IDs:
     int(d2)  # returns 2
 
 Or, skip primary IDs altogether for a pure enumeration:
-  
+
     from data_enum import DataEnum
 
     class Currency(DataEnum):
@@ -113,6 +113,10 @@ Look up with members with defaults:
     Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
 
 ## Testing, etc.
+
+Install requrements:
+
+    make install
 
 Sort imports (Requires Python >= 3.6):
 
