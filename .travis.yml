@@ -7,6 +7,6 @@ python:
 before_install:
   - python -m pip install --upgrade pip
 install:
-  - pip install --user -r requirements/test.txt --use-deprecated=legacy-resolver
+  - pip install -r requirements/test.txt --use-deprecated=legacy-resolver
 script:
   - "make"
