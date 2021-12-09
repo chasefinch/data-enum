@@ -114,7 +114,7 @@ Look up with members with defaults:
 
 ## Testing, etc.
 
-Install requrements:
+Install development requirements:
 
     make install
 
