@@ -231,7 +231,7 @@ class DataEnum(metaclass=DataEnumType):
 
     def __str__(self):
         """Return the member ID as a string."""
-        return self._member_id
+        return str(self._member_id)
 
     def __int__(self):
         """Return the member ID as an int, if it can be cast to one."""
