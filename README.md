@@ -114,15 +114,15 @@ Look up with members with defaults:
 
 ## Testing, etc.
 
-Install development requirements:
+Install development requirements (Requires Python >= 3.8):
 
     make install
 
-Sort imports (Requires Python >= 3.8):
+Sort imports:
 
     make format
 
-Lint (Requires Python >= 3.8):
+Lint:
 
     make lint
 
