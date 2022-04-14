@@ -2,7 +2,7 @@
 
 ![Python 3.6+](https://img.shields.io/badge/python-3.6%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=main)](https://travis-ci.com/chasefinch/data-enum) ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
-An alternative to the built-in Python `enum` implementation. Tested in Python 3.6 and above.
+An alternative to the built-in Python `enum` implementation. Tested in Python 3.8 and above, but works on Python 3.6+.
 
 Data enums allow you to:
 
@@ -118,11 +118,11 @@ Install development requirements:
 
     make install
 
-Sort imports (Requires Python >= 3.6):
+Sort imports (Requires Python >= 3.8):
 
     make format
 
-Lint (Requires Python >= 3.6):
+Lint (Requires Python >= 3.8):
 
     make lint
 
