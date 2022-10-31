@@ -159,5 +159,5 @@ make lint
 Test:
 
 ``` bash
-    make test
+make test
 ```
