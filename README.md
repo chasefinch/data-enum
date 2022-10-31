@@ -17,115 +17,147 @@ Data enums allow you to:
 
 Install via PyPI:
 
-    pip install data-enum
+``` bash
+pip install data-enum
+```
 
 Minimal usage:
 
-    from data_enum import DataEnum
+``` py
+from data_enum import DataEnum
 
-    class Currency(DataEnum):
-        data_attributes = ('symbol', 'name')
+class Currency(DataEnum):
+    data_attributes = ('symbol', 'name')
 
-    Currency('CAD', symbol='$', name='Canadian dollar')
-    Currency('USD', symbol='$', name='United States dollar')
-    Currency('EUR', symbol='€', name='Euro')
+Currency('CAD', symbol='$', name='Canadian dollar')
+Currency('USD', symbol='$', name='United States dollar')
+Currency('EUR', symbol='€', name='Euro')
+```
 
 Access the members by value:
 
-    Currency.get('USD')
-    Currency.get('CAD')
-    Currency.get('EUR')
+``` py
+Currency.get('USD')
+Currency.get('CAD')
+Currency.get('EUR')
+```
 
 Store the members as attributes:
 
-    class Currency(DataEnum):
-        data_attributes = ('symbol', 'name')
+``` py
+class Currency(DataEnum):
+    data_attributes = ('symbol', 'name')
 
-    Currency.CAD = Currency('CAD', symbol='$', name='Canadian dollar')
-    Currency.USD = Currency('USD', symbol='$', name='United States dollar')
-    Currency.EUR = Currency('EUR', symbol='€', name='Euro')
+Currency.CAD = Currency('CAD', symbol='$', name='Canadian dollar')
+Currency.USD = Currency('USD', symbol='$', name='United States dollar')
+Currency.EUR = Currency('EUR', symbol='€', name='Euro')
+```
 
 Use a custom attribute as the primary ID:
 
-    class Currency(DataEnum):
-        primary_attribute = 'code'
-        data_attributes = ('symbol', 'name')
+``` py
+class Currency(DataEnum):
+    primary_attribute = 'code'
+    data_attributes = ('symbol', 'name')
 
-    Currency('CAD', symbol='$', name='Canadian dollar')
-    Currency('USD', symbol='$', name='United States dollar')
-    Currency('EUR', symbol='€', name='Euro')
+Currency('CAD', symbol='$', name='Canadian dollar')
+Currency('USD', symbol='$', name='United States dollar')
+Currency('EUR', symbol='€', name='Euro')
+```
 
 Use integers as primary IDs:
 
-    class Door(DataEnum):
-        data_attributes = ('description',)
+``` py
+class Door(DataEnum):
+    data_attributes = ('description',)
 
-    Door(1, description='Door #1')
-    Door(2, description='Door #2')
-    Door(3, description='Door #3')
+Door(1, description='Door #1')
+Door(2, description='Door #2')
+Door(3, description='Door #3')
 
-    d2 = Door.get(2)  # returns Door(2, description='Door #2')
+d2 = Door.get(2)  # returns Door(2, description='Door #2')
 
-    int(d2)  # returns 2
+int(d2)  # returns 2
+```
 
 Or, skip primary IDs altogether for a pure enumeration:
 
-    from data_enum import DataEnum
+``` py
+from data_enum import DataEnum
 
-    class Currency(DataEnum):
-        data_attributes = ('symbol', 'name')
+class Currency(DataEnum):
+    data_attributes = ('symbol', 'name')
 
-    Currency.CAD = Currency(symbol='$', name='Canadian dollar')
-    Currency.USD = Currency(symbol='$', name='United States dollar')
-    Currency.EUR = Currency(symbol='€', name='Euro')
+Currency.CAD = Currency(symbol='$', name='Canadian dollar')
+Currency.USD = Currency(symbol='$', name='United States dollar')
+Currency.EUR = Currency(symbol='€', name='Euro')
+```
 
 Access the attached data:
 
-    print(Currency.USD.name)  # prints 'United States dollar'
-    print(Currency.EUR.symbol)  # prints '€'
+``` py
+print(Currency.USD.name)  # prints 'United States dollar'
+print(Currency.EUR.symbol)  # prints '€'
 
-    print(Currency.USD)  # prints 'USD'
+print(Currency.USD)  # prints 'USD'
+```
 
 Compare directly:
 
-    Currency.USD == Currency.CAD  # returns False
-    Currency.EUR == Currency.EUR  # returns True
+``` py
+Currency.USD == Currency.CAD  # returns False
+Currency.EUR == Currency.EUR  # returns True
+```
 
 Enforce unique secondary attributes:
 
-    class Currency(DataEnum):
-        # Use a tuple with the second value as True for unique keys
-        data_attributes = (('symbol', True), 'name')
+``` py
+class Currency(DataEnum):
+    # Use a tuple with the second value as True for unique keys
+    data_attributes = (('symbol', True), 'name')
 
-    # Throws ValueError
-    Currency('CAD', symbol='$', name='Canadian dollar')
-    Currency('USD', symbol='$', name='United States dollar')
+# Throws ValueError
+Currency('CAD', symbol='$', name='Canadian dollar')
+Currency('USD', symbol='$', name='United States dollar')
+```
 
 Look up members by unique secondary attributes:
 
-    Currency.get(symbol='€')  # returns Currency.EUR
-    Currency.get(symbol='&')  # throws MemberDoesNotExistError
+``` py
+Currency.get(symbol='€')  # returns Currency.EUR
+Currency.get(symbol='&')  # throws MemberDoesNotExistError
+```
 
 Look up with members with defaults:
 
-    Currency.get('ZZZ', Currency.USD)  # returns Currency.USD
-    Currency.get('ZZZ', default=Currency.USD)  # returns Currency.USD
-    Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
+``` py
+Currency.get('ZZZ', Currency.USD)  # returns Currency.USD
+Currency.get('ZZZ', default=Currency.USD)  # returns Currency.USD
+Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
+```
 
 ## Testing, etc.
 
 Install development requirements (Requires Python >= 3.8):
 
-    make install
+``` bash
+make install
+```
 
 Sort imports:
 
-    make format
+``` bash
+make format
+```
 
 Lint:
 
-    make lint
+``` bash
+make lint
+```
 
 Test:
 
-    make test
+``` bash
+make test
+```
