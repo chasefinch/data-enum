@@ -8,7 +8,7 @@ with open("README.md", "r") as readme_file:
 
 setuptools.setup(
     name="data-enum",
-    version="2.0.1",
+    version="2.1.0",
     author="Chase Finch",
     author_email="chase@finch.email",
     description="An alternative to the built-in Python `enum` implementation",
