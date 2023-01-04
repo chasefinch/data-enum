@@ -9,7 +9,7 @@ class MemberDoesNotExistError(Exception):
     """An error to be thrown when the requested member does not exist."""
 
 
-DEFAULT_PRIMARY_ATTRIBUTE = "_id_"
+DEFAULT_PRIMARY_ATTR = "_id_"
 
 
 class DataEnumType(type):
@@ -17,20 +17,20 @@ class DataEnumType(type):
 
     def __init__(cls, *args):
         """Define the new type in place."""
-        cls.primary_attribute = getattr(cls, "primary_attribute", DEFAULT_PRIMARY_ATTRIBUTE)
+        cls.primary_attr = getattr(cls, "primary_attr", DEFAULT_PRIMARY_ATTR)
 
-        if not isinstance(getattr(cls, "data_attributes", ()), (tuple, list)):
-            # Expected data_attributes to be a tuple or list, if provided
+        if not isinstance(getattr(cls, "data_attrs", ()), (tuple, list)):
+            # Expected data_attrs to be a tuple or list, if provided
             raise ConfigurationError("Expected tuple or list of attribute names")
 
-        # Make sure there are no conflicts with data_attributes
+        # Make sure there are no conflicts with data_attrs
         data_attrs = cls._data_attrs_flat
         invalid_keys = (
-            cls.primary_attribute,
+            cls.primary_attr,
             "get",
             "members",
-            "data_attributes",
-            "primary_attribute",
+            "data_attrs",
+            "primary_attr",
         )
         for invalid_key in invalid_keys:
             if invalid_key in data_attrs:
@@ -49,7 +49,7 @@ class DataEnumType(type):
         The dictionary can be ordered by any unique attribute or the primary
         key attribute.
         """
-        if attr != cls.primary_attribute and attr not in cls._data_attrs_flat_unique:
+        if attr != cls.primary_attr and attr not in cls._data_attrs_flat_unique:
             raise AttributeError('"{}" has no attribute "{}"'.format(cls.__name__, attr))
 
         return {getattr(member, attr): member for member in cls.members}
@@ -58,15 +58,15 @@ class DataEnumType(type):
     def _data_attrs_flat(cls):
         """Return a flat list of data attribute names.
 
-        `data_attributes` accepts tuples in the form of ('name', True)
-        which would mark the attribute 'name' as unique, and therefore
-        available for member lookup.
+        `data_attrs` accepts tuples in the form of ('name', True) which would
+        mark the attribute 'name' as unique, and therefore available for member
+        lookup.
 
         This flattens those tuples for internal use, ignoring the second value
         of the tuple.
         """
         flat_names = []
-        for name in getattr(cls, "data_attributes", ()):
+        for name in getattr(cls, "data_attrs", ()):
             if isinstance(name, (tuple, list)):
                 flat_names.append(name[0])
             else:
@@ -77,7 +77,7 @@ class DataEnumType(type):
     def _data_attrs_flat_unique(cls):
         """Return a flat list of unique data attribute names.
 
-        `data_attributes` accepts tuples in the form of ('name', True)
+        `data_attrs` accepts tuples in the form of ('name', True)
         which would mark the attribute 'name' as unique, and therefore
         available for member lookup.
 
@@ -85,7 +85,7 @@ class DataEnumType(type):
         as unique.
         """
         flat_names = []
-        for name in getattr(cls, "data_attributes", ()):
+        for name in getattr(cls, "data_attrs", ()):
             if isinstance(name, (tuple, list)) and name[1]:
                 flat_names.append(name[0])
         return tuple(flat_names)
@@ -161,7 +161,7 @@ class DataEnum(metaclass=DataEnumType):
     def get(cls, *args, **kwargs):
         """Look up a member of the enumeration."""
         has_default = False
-        should_bail_if_auto = False
+        bail_if_auto = False
 
         if len(args) == 2:
             # Two positional arguments; the second one is the default
@@ -185,18 +185,18 @@ class DataEnum(metaclass=DataEnumType):
 
         if args:
             # Look up by primary key
-            attr = cls.primary_attribute
-            if attr == DEFAULT_PRIMARY_ATTRIBUTE:
+            attr = cls.primary_attr
+            if attr == DEFAULT_PRIMARY_ATTR:
                 # Don't expose the default ID if it's auto generated
-                should_bail_if_auto = True
+                bail_if_auto = True
 
             value = args[0]
         else:
             # Look up by attribute or id
             attr = next(iter(kwargs))
-            if attr == DEFAULT_PRIMARY_ATTRIBUTE:
+            if attr == DEFAULT_PRIMARY_ATTR:
                 # Don't expose the default ID by keyword
-                raise AttributeError('Attribute "{}" not found'.format(cls.primary_attribute))
+                raise AttributeError('Attribute "{}" not found'.format(cls.primary_attr))
 
             value = kwargs[attr]
 
@@ -212,7 +212,7 @@ class DataEnum(metaclass=DataEnumType):
             # Return the passed-in default
             return default
 
-        if member.is_auto and should_bail_if_auto:
+        if member.is_auto and bail_if_auto:
             # Don't expose the default ID if it's auto generated
             raise MemberDoesNotExistError()
 
@@ -249,7 +249,7 @@ class DataEnum(metaclass=DataEnumType):
 
     @property
     def _primary_attr(self):
-        return type(self).primary_attribute
+        return type(self).primary_attr
 
     @property
     def _member_id(self):

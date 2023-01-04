@@ -27,7 +27,7 @@ Minimal usage:
 from data_enum import DataEnum
 
 class Currency(DataEnum):
-    data_attributes = ('symbol', 'name')
+    data_attrs = ('symbol', 'name')
 
 Currency('CAD', symbol='$', name='Canadian dollar')
 Currency('USD', symbol='$', name='United States dollar')
@@ -46,7 +46,7 @@ Store the members as attributes:
 
 ``` py
 class Currency(DataEnum):
-    data_attributes = ('symbol', 'name')
+    data_attrs = ('symbol', 'name')
 
 Currency.CAD = Currency('CAD', symbol='$', name='Canadian dollar')
 Currency.USD = Currency('USD', symbol='$', name='United States dollar')
@@ -57,8 +57,8 @@ Use a custom attribute as the primary ID:
 
 ``` py
 class Currency(DataEnum):
-    primary_attribute = 'code'
-    data_attributes = ('symbol', 'name')
+    primary_attr = 'code'
+    data_attrs = ('symbol', 'name')
 
 Currency('CAD', symbol='$', name='Canadian dollar')
 Currency('USD', symbol='$', name='United States dollar')
@@ -69,7 +69,7 @@ Use integers as primary IDs:
 
 ``` py
 class Door(DataEnum):
-    data_attributes = ('description',)
+    data_attrs = ('description',)
 
 Door(1, description='Door #1')
 Door(2, description='Door #2')
@@ -86,7 +86,7 @@ Or, skip primary IDs altogether for a pure enumeration:
 from data_enum import DataEnum
 
 class Currency(DataEnum):
-    data_attributes = ('symbol', 'name')
+    data_attrs = ('symbol', 'name')
 
 Currency.CAD = Currency(symbol='$', name='Canadian dollar')
 Currency.USD = Currency(symbol='$', name='United States dollar')
@@ -114,7 +114,7 @@ Enforce unique secondary attributes:
 ``` py
 class Currency(DataEnum):
     # Use a tuple with the second value as True for unique keys
-    data_attributes = (('symbol', True), 'name')
+    data_attrs = (('symbol', True), 'name')
 
 # Throws ValueError
 Currency('CAD', symbol='$', name='Canadian dollar')

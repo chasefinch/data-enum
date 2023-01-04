@@ -15,7 +15,7 @@ from data_enum import ConfigurationError, DataEnum, MemberDoesNotExistError
 class IntEnum(DataEnum):
     """An integer-based enum for testing."""
 
-    data_attributes = ("name",)
+    data_attrs = ("name",)
 
 
 class TestDataEnum:
@@ -25,7 +25,7 @@ class TestDataEnum:
         """Set up a default test enumeration."""
 
         class Currency(DataEnum):
-            data_attributes = ("symbol", "name", "plural_name")
+            data_attrs = ("symbol", "name", "plural_name")
 
         Currency.AUD = Currency(
             "AUD",
@@ -87,33 +87,33 @@ class TestDataEnum:
         assert self.Currency.AUD == self.Currency.get("AUD")
         assert self.Currency.AUD == self.Currency.get("YYY", default=self.Currency.AUD)
 
-    def test_attributes_type_error(self):
+    def test_attrs_type_error(self):
         """Test value attribute error."""
         with pytest.raises(ConfigurationError):
 
             class TestEnum(DataEnum):
-                data_attributes = "value"
+                data_attrs = "value"
 
-    def test_attributes_error_1(self):
+    def test_attrs_error_1(self):
         """Test id attribute error."""
         with pytest.raises(ConfigurationError):
 
             class TestEnum(DataEnum):
-                primary_attribute = "id"
-                data_attributes = ("id",)
+                primary_attr = "id"
+                data_attrs = ("id",)
 
-    def test_attributes_error_2(self):
+    def test_attrs_error_2(self):
         """Test hidden attribute error."""
         with pytest.raises(ConfigurationError):
 
             class TestEnum(DataEnum):
-                data_attributes = ("_hidden",)
+                data_attrs = ("_hidden",)
 
-    def test_nested_attributes(self):
+    def test_nested_attrs(self):
         """Test nested attributes."""
 
         class Currency(DataEnum):
-            data_attributes = ("symbol", ("name", True), "plural_name")
+            data_attrs = ("symbol", ("name", True), "plural_name")
 
         Currency("CAD", symbol="$", name="Canadian dollar", plural_name="Canadian dollars")
         Currency(
@@ -127,7 +127,7 @@ class TestDataEnum:
         """Test invalid duplicate element declaration."""
 
         class Currency(DataEnum):
-            data_attributes = ("symbol", "name", "plural_name")
+            data_attrs = ("symbol", "name", "plural_name")
 
         Currency("CAD", symbol="$", name="Canadian dollar", plural_name="Canadian dollars")
 
@@ -173,7 +173,7 @@ class TestDataEnum:
         """Test various enum definitions."""
 
         class Currency1(DataEnum):
-            data_attributes = ("symbol", "name", "plural_name")
+            data_attrs = ("symbol", "name", "plural_name")
 
         Currency1("CAD", symbol="$", name="Canadian dollar", plural_name="Canadian dollars")
         Currency1(
@@ -185,14 +185,14 @@ class TestDataEnum:
 
         # Prevent initialization with no arguments
         class TestEnum(DataEnum):
-            data_attributes = ("description",)
+            data_attrs = ("description",)
 
         with pytest.raises(TypeError):
             TestEnum()
 
         # Positional initialization
         class Currency2(DataEnum):
-            data_attributes = ("symbol", "name", "plural_name")
+            data_attrs = ("symbol", "name", "plural_name")
 
         Currency2.CAD = Currency2("CAD", "$", "Canadian dollar", "Canadian dollars")
         Currency2.USD = Currency2(
@@ -224,7 +224,7 @@ class TestDataEnum:
             )
 
         class Currency3(DataEnum):
-            data_attributes = ("symbol", ("name", True), "plural_name")
+            data_attrs = ("symbol", ("name", True), "plural_name")
 
         Currency3("CAD", symbol="$", name="Canadian dollar", plural_name="Canadian dollars")
 
@@ -245,7 +245,7 @@ class TestDataEnum:
         assert self.Currency.USD != "bitcoin"
 
         class TestStringEnum(DataEnum):
-            data_attributes = ("name", "age")
+            data_attrs = ("name", "age")
 
         TestStringEnum("person A", "Susan", 13)
 
@@ -260,7 +260,7 @@ class TestDataEnum:
         assert int(linda) == 1
 
         class TestAutoEnum(DataEnum):
-            data_attributes = ("name",)
+            data_attrs = ("name",)
 
         sharon = TestAutoEnum(name="Sharon")
 
