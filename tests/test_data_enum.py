@@ -2,276 +2,422 @@
 
 # Standard Library
 import pickle
+from typing import Annotated
 
 # Third Party
 import pytest
 
 # Data Enum
-# AMP Renderer
-from data_enum import ConfigurationError, DataEnum, MemberDoesNotExistError
+from data_enum import UNIQUE, ConfigurationError, DataEnum, MemberDoesNotExistError
 
 
-class IntEnum(DataEnum):
-    """An integer-based enum for testing."""
+class Currency(DataEnum):
+    """A test enum representing currencies."""
 
-    data_attrs = ("name",)
+    __members__ = ("USD", "EUR", "GBP", "JPY", "CAD", "AUD")
+
+    symbol: str
+    name: str
+    code: Annotated[str, UNIQUE]
+    plural_name: str
 
 
-class TestDataEnum:
-    """Test the DataEnum class."""
+Currency.USD = Currency(symbol="$", name="US Dollar", code="USD", plural_name="US Dollars")
+Currency.EUR = Currency(symbol="€", name="Euro", code="EUR", plural_name="Euros")
+Currency.GBP = Currency(
+    symbol="£",
+    name="Pound Sterling",
+    code="GBP",
+    plural_name="Pounds Sterling",
+)
+Currency.JPY = Currency(symbol="¥", name="Japanese Yen", code="JPY", plural_name="Japanese Yen")
+Currency.CAD = Currency(
+    symbol="$",
+    name="Canadian Dollar",
+    code="CAD",
+    plural_name="Canadian Dollars",
+)
+Currency.AUD = Currency(
+    symbol="$",
+    name="Australian Dollar",
+    code="AUD",
+    plural_name="Australian Dollars",
+)
 
-    def simple_setup(self) -> None:
-        """Set up a default test enumeration."""
 
-        class Currency(DataEnum):
-            data_attrs = ("symbol", "name", "plural_name")
+class TestConfiguration:
+    """Test class definition and configuration errors."""
 
-        Currency.AUD = Currency(
-            "AUD",
-            symbol="$",
-            name="Australian dollar",
-            plural_name="Australian dollars",
-        )
-        Currency.CAD = Currency(
-            "CAD",
-            symbol="$",
-            name="Canadian dollar",
-            plural_name="Canadian dollars",
-        )
-        Currency.EUR = Currency("EUR", symbol="€", name="Euro", plural_name="Euros")
-        Currency.INR = Currency(
-            "INR",
-            symbol="₹",
-            name="Indian rupee",
-            plural_name="Indian rupees",
-        )
-        Currency.JPY = Currency("JPY", symbol="¥", name="Japanese yen", plural_name="Japanese yen")
-        Currency.GBP = Currency(
-            "GBP",
-            symbol="£",
-            name="Pound sterling",
-            plural_name="Pounds sterling",
-        )
-        Currency.MXN = Currency(
-            "MXN",
-            symbol="$",
-            name="Mexican peso",
-            plural_name="Mexican pesos",
-        )
-        Currency.NZD = Currency(
-            "NZD",
-            symbol="$",
-            name="New Zealand dollar",
-            plural_name="New Zealand dollars",
-        )
-        Currency.SGD = Currency(
-            "SGD",
-            symbol="$",
-            name="Singapore dollar",
-            plural_name="Singapore dollars",
-        )
-        Currency.USD = Currency(
-            "USD",
-            symbol="$",
-            name="United States dollar",
-            plural_name="United States dollars",
-        )
+    def test_missing_members(self) -> None:
+        with pytest.raises(ConfigurationError, match="__members__ must be defined"):
 
-        self.Currency = Currency
+            class Bad(DataEnum):
+                name: str
 
-    def test_simple(self) -> None:
-        """Test basic setup."""
-        self.simple_setup()
+    def test_members_not_tuple(self) -> None:
+        with pytest.raises(ConfigurationError, match="__members__ must be a tuple"):
 
-        assert self.Currency.get("AUD") == self.Currency.AUD
-        assert self.Currency.get("YYY", default=self.Currency.AUD) == self.Currency.AUD
+            class Bad(DataEnum):
+                __members__ = ["A", "B"]
+                name: str
 
-    def test_attrs_type_error(self) -> None:
-        """Test value attribute error."""
-        with pytest.raises(ConfigurationError):
+    def test_duplicate_member_names(self) -> None:
+        with pytest.raises(ConfigurationError, match="duplicate names"):
 
-            class TestEnum(DataEnum):
-                data_attrs = "value"
+            class Bad(DataEnum):
+                __members__ = ("A", "A")
+                name: str
 
-    def test_attrs_error_1(self) -> None:
-        """Test id attribute error."""
-        with pytest.raises(ConfigurationError):
+    def test_invalid_member_name(self) -> None:
+        with pytest.raises(ConfigurationError, match="Invalid member name"):
 
-            class TestEnum(DataEnum):
-                primary_attr = "id"
-                data_attrs = ("id",)
+            class Bad(DataEnum):
+                __members__ = ("123bad",)
+                name: str
 
-    def test_attrs_error_2(self) -> None:
-        """Test hidden attribute error."""
-        with pytest.raises(ConfigurationError):
+    def test_underscore_member_name(self) -> None:
+        with pytest.raises(ConfigurationError, match="underscore"):
 
-            class TestEnum(DataEnum):
-                data_attrs = ("_hidden",)
+            class Bad(DataEnum):
+                __members__ = ("_HIDDEN",)
+                name: str
 
-    def test_nested_attrs(self) -> None:
-        """Test nested attributes."""
+    def test_reserved_member_name(self) -> None:
+        with pytest.raises(ConfigurationError, match="reserved"):
 
-        class Currency(DataEnum):
-            data_attrs = ("symbol", ("name", True), "plural_name")
+            class Bad(DataEnum):
+                __members__ = ("get",)
+                name: str
 
-        Currency("CAD", symbol="$", name="Canadian dollar", plural_name="Canadian dollars")
-        Currency(
-            "USD",
-            symbol="$",
-            name="United States dollar",
-            plural_name="United States dollars",
-        )
+    def test_no_data_attrs(self) -> None:
+        class PureEnum(DataEnum):
+            __members__ = ("A", "B")
 
-    def test_duplicate_element_error(self) -> None:
-        """Test invalid duplicate element declaration."""
+        PureEnum.A = PureEnum()
+        PureEnum.B = PureEnum()
+        assert PureEnum.get("A") is PureEnum.A
+        assert PureEnum.members == (PureEnum.A, PureEnum.B)
 
-        class Currency(DataEnum):
-            data_attrs = ("symbol", "name", "plural_name")
+    def test_private_annotations_ignored(self) -> None:
+        class WithPrivate(DataEnum):
+            __members__ = ("A",)
+            _internal: str
+            name: str
 
-        Currency("CAD", symbol="$", name="Canadian dollar", plural_name="Canadian dollars")
+        WithPrivate.A = WithPrivate(name="Alpha")
+        assert WithPrivate.A.name == "Alpha"
+        assert not hasattr(WithPrivate.A, "_internal")
 
-        with pytest.raises(ValueError):
-            Currency(
-                "CAD",
-                symbol="$",
-                name="United States dollar",
-                plural_name="United States dollars",
-            )
+    def test_reserved_attr_name(self) -> None:
+        with pytest.raises(ConfigurationError, match="reserved"):
 
-    def test_get(self) -> None:
-        """Test member lookup."""
-        self.simple_setup()
+            class Bad(DataEnum):
+                __members__ = ("A",)
+                members: str
 
-        # Positional default
-        usd = self.Currency.get("AAA", self.Currency.USD)
-        assert usd == self.Currency.USD
+    def test_cannot_subclass_enum(self) -> None:
+        with pytest.raises(ConfigurationError, match="Cannot subclass"):
 
-        # Keyword default
-        usd = self.Currency.get("AAA", default=self.Currency.USD)
-        assert usd == self.Currency.USD
+            class Bad(Currency):
+                __members__ = ("X",)
+                extra: str
 
-        # Invalid keywords
-        with pytest.raises(AttributeError):
-            self.Currency.get(three_letters="AAA")
 
-        with pytest.raises(AttributeError):
-            self.Currency.get(_id_="abc")
+class TestMemberAssignment:
+    """Test member registration and validation."""
 
-        # Invalid keyword count
+    def test_duplicate_member(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED", "BLUE", "GREEN")
+            name: str
+
+        Color.RED = Color(name="Red")
+        with pytest.raises(ConfigurationError, match="already defined"):
+            Color.RED = Color(name="Also Red")
+
+    def test_wrong_type(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED",)
+            name: str
+
+        with pytest.raises(ConfigurationError, match="must be an instance"):
+            Color.RED = "not an enum"
+
+    def test_duplicate_unique_value(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED", "BLUE")
+            name: str
+            hex_code: Annotated[str, UNIQUE]
+
+        Color.RED = Color(name="Red", hex_code="#FF0000")
+        with pytest.raises(ConfigurationError, match="Duplicate value"):
+            Color.BLUE = Color(name="Blue", hex_code="#FF0000")
+
+    def test_non_member_class_attr(self) -> None:
+        """Assigning a non-enum value to a non-member name is fine."""
+
+        class Color(DataEnum):
+            __members__ = ("RED",)
+            name: str
+
+        Color.EXTRA = "some value"
+        assert Color.EXTRA == "some value"
+
+    def test_instance_to_non_member_name(self) -> None:
+        """Assigning an enum instance to a non-member name raises."""
+
+        class Color(DataEnum):
+            __members__ = ("RED",)
+            name: str
+
+        with pytest.raises(ConfigurationError, match="not a declared member"):
+            Color.BLUE = Color(name="Blue")
+
+    def test_double_assign_instance(self) -> None:
+        """Cannot assign the same instance to two member names."""
+
+        class Color(DataEnum):
+            __members__ = ("RED", "BLUE")
+            name: str
+
+        instance = Color(name="Red")
+        Color.RED = instance
+        with pytest.raises(ConfigurationError, match="already assigned"):
+            Color.BLUE = instance
+
+    def test_too_many_instances(self) -> None:
+        """Cannot create more instances than declared members."""
+
+        class Color(DataEnum):
+            __members__ = ("RED",)
+            name: str
+
+        Color.RED = Color(name="Red")
+        with pytest.raises(ConfigurationError, match="cannot create more"):
+            Color(name="Extra")
+
+    def test_immutable_members(self) -> None:
+        with pytest.raises(AttributeError, match="immutable"):
+            Currency.USD.name = "Bitcoin"
+
+    def test_immutable_delete(self) -> None:
+        with pytest.raises(AttributeError, match="immutable"):
+            del Currency.USD.name  # noqa: WPS420
+
+
+class TestInit:
+    """Test member instance creation."""
+
+    def test_missing_attr(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED",)
+            name: str
+            hex_code: str
+
+        with pytest.raises(TypeError, match="Missing required"):
+            Color.RED = Color(name="Red")
+
+    def test_extra_attr(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED",)
+            name: str
+
+        with pytest.raises(TypeError, match="Unknown"):
+            Color.RED = Color(name="Red", extra="bad")
+
+    def test_keyword_only(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED",)
+            name: str
+
         with pytest.raises(TypeError):
-            self.Currency.get("USD", self.Currency.USD, "extra")
+            Color("Red")
 
-        with pytest.raises(TypeError):
-            self.Currency.get("USD", self.Currency.USD, hello="there")
 
-        # Member not found
-        with pytest.raises(MemberDoesNotExistError):
-            self.Currency.get("AAA")
+class TestGet:
+    """Test member lookup."""
 
-    def test_init(self) -> None:
-        """Test various enum definitions."""
+    def test_get_by_name(self) -> None:
+        assert Currency.get("USD") is Currency.USD
+        assert Currency.get("EUR") is Currency.EUR
 
-        class Currency1(DataEnum):
-            data_attrs = ("symbol", "name", "plural_name")
+    def test_get_by_unique_attr(self) -> None:
+        assert Currency.get(code="USD") is Currency.USD
+        assert Currency.get(code="GBP") is Currency.GBP
 
-        Currency1("CAD", symbol="$", name="Canadian dollar", plural_name="Canadian dollars")
-        Currency1(
-            "USD",
-            symbol="$",
-            name="United States dollar",
-            plural_name="United States dollars",
+    def test_get_name_default(self) -> None:
+        assert Currency.get("MISSING", default=None) is None
+        assert Currency.get("MISSING", default=Currency.USD) is Currency.USD
+
+    def test_get_unique_default(self) -> None:
+        assert Currency.get(code="MISSING", default=None) is None
+        assert Currency.get(code="MISSING", default=Currency.USD) is Currency.USD
+
+    def test_get_name_not_found(self) -> None:
+        with pytest.raises(MemberDoesNotExistError, match="no member"):
+            Currency.get("MISSING")
+
+    def test_get_unique_not_found(self) -> None:
+        with pytest.raises(MemberDoesNotExistError, match="No Currency"):
+            Currency.get(code="MISSING")
+
+    def test_get_non_unique_attr_rejected(self) -> None:
+        with pytest.raises(TypeError, match="not a unique attribute"):
+            Currency.get(symbol="$")
+
+    def test_get_no_args(self) -> None:
+        with pytest.raises(TypeError, match="exactly one argument"):
+            Currency.get()
+
+    def test_get_mixed_args(self) -> None:
+        with pytest.raises(TypeError, match="Cannot combine"):
+            Currency.get("USD", code="USD")
+
+    def test_get_multiple_kwargs(self) -> None:
+        with pytest.raises(TypeError, match="exactly one argument"):
+            Currency.get(code="USD", name="US Dollar")
+
+    def test_get_before_complete(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED", "BLUE")
+            name: str
+
+        Color.RED = Color(name="Red")
+        with pytest.raises(ConfigurationError, match="not fully defined"):
+            Color.get("RED")
+
+    def test_get_no_members_assigned(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED",)
+            name: str
+
+        with pytest.raises(ConfigurationError, match="No members have been assigned"):
+            Color.get("RED")
+
+
+class TestFilter:
+    """Test non-unique attribute lookup."""
+
+    def test_filter_non_unique(self) -> None:
+        result = Currency.filter(symbol="$")
+        assert isinstance(result, frozenset)
+        assert Currency.USD in result
+        assert Currency.CAD in result
+        assert Currency.AUD in result
+        assert len(result) == 3
+
+    def test_filter_no_match(self) -> None:
+        result = Currency.filter(symbol="₿")
+        assert result == frozenset()
+
+    def test_filter_unique_attr(self) -> None:
+        result = Currency.filter(code="USD")
+        assert result == frozenset((Currency.USD,))
+
+    def test_filter_unique_no_match(self) -> None:
+        result = Currency.filter(code="MISSING")
+        assert result == frozenset()
+
+    def test_filter_invalid_attr(self) -> None:
+        with pytest.raises(TypeError, match="not an attribute"):
+            Currency.filter(bad_attr="x")
+
+    def test_filter_no_args(self) -> None:
+        with pytest.raises(TypeError, match="exactly one keyword"):
+            Currency.filter()
+
+    def test_filter_multiple_args(self) -> None:
+        with pytest.raises(TypeError, match="exactly one keyword"):
+            Currency.filter(symbol="$", name="US Dollar")
+
+    def test_filter_before_complete(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED", "BLUE")
+            name: str
+
+        Color.RED = Color(name="Red")
+        with pytest.raises(ConfigurationError, match="not fully defined"):
+            Color.filter(name="Red")
+
+
+class TestMembers:
+    """Test the members property."""
+
+    def test_members_order(self) -> None:
+        assert Currency.members == (
+            Currency.USD,
+            Currency.EUR,
+            Currency.GBP,
+            Currency.JPY,
+            Currency.CAD,
+            Currency.AUD,
         )
 
-        # Prevent initialization with no arguments
-        class TestEnum(DataEnum):
-            data_attrs = ("description",)
+    def test_members_before_complete(self) -> None:
+        class Color(DataEnum):
+            __members__ = ("RED", "BLUE")
+            name: str
 
-        with pytest.raises(TypeError):
-            TestEnum()
+        Color.RED = Color(name="Red")
+        with pytest.raises(ConfigurationError, match="not fully defined"):
+            Color.members  # noqa: B018
 
-        # Positional initialization
-        class Currency2(DataEnum):
-            data_attrs = ("symbol", "name", "plural_name")
+    def test_empty_enum(self) -> None:
+        class Empty(DataEnum):
+            __members__ = ()
+            name: str
 
-        Currency2.CAD = Currency2("CAD", "$", "Canadian dollar", "Canadian dollars")
-        Currency2.USD = Currency2(
-            "USD",
-            "$",
-            "United States dollar",
-            plural_name="United States dollars",
-        )
+        assert Empty.members == ()
 
-        assert Currency2.CAD.plural_name == "Canadian dollars"
-        assert Currency2.USD.plural_name == "United States dollars"
 
-        # Missing attribute
-        with pytest.raises(TypeError):
-            Currency2("MXN", symbol="$", name="Mexican peso")
+class TestSpecialMethods:
+    """Test __eq__, __hash__, __repr__, __str__, __reduce__."""
 
-        # Extra positional attribute
-        with pytest.raises(TypeError):
-            Currency2("USD", "$", "United States dollar", "United States dollars", 100)
+    def test_eq_identity(self) -> None:
+        assert Currency.USD == Currency.USD
+        assert Currency.USD is Currency.USD
 
-        # Extra keyword attribute
-        with pytest.raises(TypeError):
-            Currency2(
-                "MXN",
-                symbol="$",
-                name="Mexican peso",
-                plural_name="United States dollars",
-                count=10,
-            )
+    def test_neq(self) -> None:
+        assert Currency.USD != Currency.EUR
 
-        class Currency3(DataEnum):
-            data_attrs = ("symbol", ("name", True), "plural_name")
+    def test_eq_non_enum(self) -> None:
+        assert Currency.USD != "USD"
+        assert not (Currency.USD == "USD")  # noqa: SIM201
 
-        Currency3("CAD", symbol="$", name="Canadian dollar", plural_name="Canadian dollars")
+    def test_hash(self) -> None:
+        member_set = {Currency.USD, Currency.EUR, Currency.USD}
+        assert len(member_set) == 2
 
-        # Duplicate values for unique attribute
-        with pytest.raises(ValueError):
-            Currency3(
-                "USD",
-                symbol="$",
-                name="Canadian dollar",
-                plural_name="United States dollars",
-            )
+    def test_hash_as_dict_key(self) -> None:
+        member_dict = {Currency.USD: "dollar", Currency.EUR: "euro"}
+        assert member_dict[Currency.USD] == "dollar"
 
-    def test_other(self) -> None:
-        """Test remaining builtin overrides."""
-        self.simple_setup()
+    def test_repr(self) -> None:
+        assert repr(Currency.USD) == "Currency.USD"
 
-        assert not self.Currency.USD == "bitcoin"  # noqa: SIM201 (testing this specifically)
-        assert self.Currency.USD != "bitcoin"
+    def test_str(self) -> None:
+        assert str(Currency.USD) == "USD"
 
-        class TestStringEnum(DataEnum):
-            data_attrs = ("name", "age")
+    def test_pickle(self) -> None:
+        loaded = pickle.loads(pickle.dumps(Currency.USD))  # noqa: S301
+        assert loaded is Currency.USD
 
-        TestStringEnum("person A", "Susan", 13)
+    def test_pickle_roundtrip_identity(self) -> None:
+        for member in Currency.members:
+            loaded = pickle.loads(pickle.dumps(member))  # noqa: S301
+            assert loaded is member
 
-        susan = TestStringEnum.get("person A")
 
-        assert str(susan) == "person A"
+class TestAttributeAccess:
+    """Test reading data attributes on members."""
 
-        IntEnum(1, "Linda")
+    def test_read_attrs(self) -> None:
+        assert Currency.USD.symbol == "$"
+        assert Currency.USD.name == "US Dollar"
+        assert Currency.USD.code == "USD"
+        assert Currency.USD.plural_name == "US Dollars"
 
-        linda = IntEnum.get(1)
-
-        assert int(linda) == 1
-
-        class TestAutoEnum(DataEnum):
-            data_attrs = ("name",)
-
-        sharon = TestAutoEnum(name="Sharon")
-
-        assert int(sharon) == 0
-
-        with pytest.raises(MemberDoesNotExistError):
-            TestAutoEnum.get(0)
-
-        assert repr(susan) == "TestStringEnum('person A', name='Susan', age=13)"
-        assert repr(linda) == "IntEnum(1, name='Linda')"
-        assert repr(sharon) == "TestAutoEnum(0, name='Sharon')"
-
-        assert hash(linda) == hash(1)
-
-        assert linda == pickle.loads(pickle.dumps(linda))  # noqa: S301
+    def test_read_attrs_other(self) -> None:
+        assert Currency.EUR.symbol == "€"
+        assert Currency.EUR.name == "Euro"
+        assert Currency.GBP.symbol == "£"

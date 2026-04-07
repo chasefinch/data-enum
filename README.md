@@ -6,12 +6,11 @@ An alternative to the built-in Python `enum` implementation. Supports Python 3.1
 
 Data enums allow you to:
 
-- Associate data with enum members without using tuple-based initialization
-- Use an intuitive initialization syntax to define members
-- Define pure enums without using `auto()`
-- Define value-based enums without storing them as class attributes
-- Define secondary unique keys & use them to look up enum members
-- Use classmethod syntax (`.get(...)`) to look up members, instead of using initializers
+- Define enum members with associated data using type hints
+- Enforce unique constraints on attributes
+- Look up members by name or unique attribute values
+- Filter members by any attribute
+- Use pure enums without any data attributes
 
 ## Usage
 
@@ -21,119 +20,107 @@ Install via PyPI:
 pip install data-enum
 ```
 
-Minimal usage:
+### Basic example
 
 ```py
-from data_enum import DataEnum
+from typing import Annotated
+
+from data_enum import DataEnum, UNIQUE
 
 class Currency(DataEnum):
-    data_attrs = ('symbol', 'name')
+    __members__ = ("USD", "EUR", "GBP")
 
-Currency('CAD', symbol='$', name='Canadian dollar')
-Currency('USD', symbol='$', name='United States dollar')
-Currency('EUR', symbol='€', name='Euro')
+    symbol: str
+    name: str
+    code: Annotated[str, UNIQUE]
+
+Currency.USD = Currency(symbol="$", name="US Dollar", code="USD")
+Currency.EUR = Currency(symbol="€", name="Euro", code="EUR")
+Currency.GBP = Currency(symbol="£", name="Pound Sterling", code="GBP")
 ```
 
-Access the members by value:
+### Access data on members
 
 ```py
-Currency.get('USD')
-Currency.get('CAD')
-Currency.get('EUR')
+Currency.USD.name      # 'US Dollar'
+Currency.EUR.symbol    # '€'
+str(Currency.USD)      # 'USD'
+repr(Currency.USD)     # 'Currency.USD'
 ```
 
-Store the members as attributes:
+### Look up members by name
 
 ```py
-class Currency(DataEnum):
-    data_attrs = ('symbol', 'name')
-
-Currency.CAD = Currency('CAD', symbol='$', name='Canadian dollar')
-Currency.USD = Currency('USD', symbol='$', name='United States dollar')
-Currency.EUR = Currency('EUR', symbol='€', name='Euro')
+Currency.get("USD")                          # Currency.USD
+Currency.get("MISSING", default=None)        # None
+Currency.get("MISSING", default=Currency.USD)  # Currency.USD
 ```
 
-Use a custom attribute as the primary ID:
+### Look up by unique attribute
 
 ```py
-class Currency(DataEnum):
-    primary_attr = 'code'
-    data_attrs = ('symbol', 'name')
-
-Currency('CAD', symbol='$', name='Canadian dollar')
-Currency('USD', symbol='$', name='United States dollar')
-Currency('EUR', symbol='€', name='Euro')
+Currency.get(code="EUR")                          # Currency.EUR
+Currency.get(code="MISSING", default=Currency.USD)  # Currency.USD
 ```
 
-Use integers as primary IDs:
+### Filter by any attribute
 
 ```py
-class Door(DataEnum):
-    data_attrs = ('description',)
-
-Door(1, description='Door #1')
-Door(2, description='Door #2')
-Door(3, description='Door #3')
-
-d2 = Door.get(2)  # returns Door(2, description='Door #2')
-
-int(d2)  # returns 2
+Currency.filter(symbol="$")  # frozenset({Currency.USD})
+Currency.filter(symbol="₿")  # frozenset()
 ```
 
-Or, skip primary IDs altogether for a pure enumeration:
+### Compare and hash
 
 ```py
-from data_enum import DataEnum
+Currency.USD == Currency.EUR  # False
+Currency.USD == Currency.USD  # True
 
-class Currency(DataEnum):
-    data_attrs = ('symbol', 'name')
-
-Currency.CAD = Currency(symbol='$', name='Canadian dollar')
-Currency.USD = Currency(symbol='$', name='United States dollar')
-Currency.EUR = Currency(symbol='€', name='Euro')
+{Currency.USD, Currency.EUR}  # works in sets
+{Currency.USD: "dollar"}      # works as dict keys
 ```
 
-Access the attached data:
+### No-data enums
 
 ```py
-print(Currency.USD.name)  # prints 'United States dollar'
-print(Currency.EUR.symbol)  # prints '€'
+class Direction(DataEnum):
+    __members__ = ("NORTH", "SOUTH", "EAST", "WEST")
 
-print(Currency.USD)  # prints 'USD'
+Direction.NORTH = Direction()
+Direction.SOUTH = Direction()
+Direction.EAST = Direction()
+Direction.WEST = Direction()
 ```
 
-Compare directly:
+### All members (in declaration order)
 
 ```py
-Currency.USD == Currency.CAD  # returns False
-Currency.EUR == Currency.EUR  # returns True
+Currency.members  # (Currency.USD, Currency.EUR, Currency.GBP)
 ```
 
-Enforce unique secondary attributes:
+### Safety
+
+Members are immutable:
 
 ```py
-class Currency(DataEnum):
-    # Use a tuple with the second value as True for unique keys
-    data_attrs = (('symbol', True), 'name')
-
-# Throws ValueError
-Currency('CAD', symbol='$', name='Canadian dollar')
-Currency('USD', symbol='$', name='United States dollar')
+Currency.USD.name = "Bitcoin"  # raises AttributeError
 ```
 
-Look up members by unique secondary attributes:
+Duplicate unique values are rejected:
 
 ```py
-Currency.get(symbol='€')  # returns Currency.EUR
-Currency.get(symbol='&')  # throws MemberDoesNotExistError
+Currency.GBP = Currency(symbol="£", name="Pound", code="EUR")  # raises ConfigurationError
 ```
 
-Look up with members with defaults:
+All declared members must be assigned before use:
 
 ```py
-Currency.get('ZZZ', Currency.USD)  # returns Currency.USD
-Currency.get('ZZZ', default=Currency.USD)  # returns Currency.USD
-Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
+class Color(DataEnum):
+    __members__ = ("RED", "BLUE")
+    name: str
+
+Color.RED = Color(name="Red")
+Color.get("RED")  # raises ConfigurationError (BLUE not yet assigned)
 ```
 
 ## Development

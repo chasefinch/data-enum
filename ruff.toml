@@ -29,6 +29,9 @@ ignore = [
 	"C", "PLR09",  # Complexity rules
 ]
 
+[lint.per-file-ignores]
+"tests/*" = ["D102", "PLR2004", "RUF012"]
+
 [lint.isort]
 combine-as-imports = true
 detect-same-package = true
