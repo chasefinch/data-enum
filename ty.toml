@@ -17,8 +17,10 @@ include = ["tests/*"]
 [overrides.rules]
 # DataEnum uses dynamic attribute setting (Currency.USD = Currency(...))
 unresolved-attribute = "ignore"
-# Tests intentionally pass wrong arg types to verify errors
+# Tests intentionally pass wrong args to verify errors
 too-many-positional-arguments = "ignore"
+missing-argument = "ignore"
+unknown-argument = "ignore"
 
 [terminal]
 output-format = "full"

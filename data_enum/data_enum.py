@@ -2,21 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any, get_args, get_origin
+from typing import Annotated, Any, dataclass_transform, get_args, get_origin
 
 _MISSING = object()
 
 UNIQUE = object()
-
-
-class Default:
-    """Marker for default attribute values in Annotated type hints."""
-
-    __slots__ = ("value",)
-
-    def __init__(self, value: Any) -> None:  # noqa: ANN401
-        """Store the default value."""
-        self.value = value
 
 
 class UniqueTogether:
@@ -40,6 +30,7 @@ class MemberDoesNotExistError(Exception):
     """An error to be thrown when the requested member does not exist."""
 
 
+@dataclass_transform(kw_only_default=True)
 class DataEnumMeta(type):
     """Metaclass for DataEnum that handles member registration and lookup."""
 
@@ -109,13 +100,16 @@ class DataEnumMeta(type):
                 if UNIQUE in args:
                     unique_attrs.add(attr_name)
                 for arg in args[1:]:
-                    if isinstance(arg, Default):
-                        default_attrs[attr_name] = arg.value
-                    elif isinstance(arg, UniqueTogether):
+                    if isinstance(arg, UniqueTogether):
                         unique_together_map.setdefault(arg.group, []).append(attr_name)
                 data_attrs[attr_name] = args[0]
             else:
                 data_attrs[attr_name] = annotation
+
+        # Extract defaults from namespace values (field: type = value syntax)
+        for attr_name in data_attrs:
+            if attr_name in namespace:
+                default_attrs[attr_name] = namespace.pop(attr_name)
 
         # Validate unique-together groups have at least 2 attributes
         for group_name, group_attrs in unique_together_map.items():

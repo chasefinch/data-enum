@@ -12,7 +12,6 @@ from data_enum import (
     UNIQUE,
     ConfigurationError,
     DataEnum,
-    Default,
     MemberDoesNotExistError,
     UniqueTogether,
 )
@@ -431,13 +430,13 @@ class TestAttributeAccess:
 
 
 class TestDefault:
-    """Test Default(...) for attribute default values."""
+    """Test default values via = syntax."""
 
     def test_default_applied(self) -> None:
         class Status(DataEnum):
             __members__ = ("ACTIVE", "INACTIVE")
             label: str
-            enabled: Annotated[bool, Default(True)]  # noqa: FBT003
+            enabled: bool = True  # noqa: FBT001
 
         Status.ACTIVE = Status(label="Active")
         Status.INACTIVE = Status(label="Inactive", enabled=False)  # noqa: FBT003
@@ -448,17 +447,17 @@ class TestDefault:
         class Item(DataEnum):
             __members__ = ("A", "B")
             code: Annotated[str, UNIQUE]
-            priority: Annotated[int, Default(0)]
+            priority: int = 0
 
         Item.A = Item(code="a", priority=5)
         Item.B = Item(code="b")
         assert Item.A.priority == 5
         assert Item.B.priority == 0
 
-    def test_unique_and_default_combined(self) -> None:
+    def test_unique_attr_with_default(self) -> None:
         class Tag(DataEnum):
             __members__ = ("X", "Y")
-            name: Annotated[str, UNIQUE, Default("unnamed")]
+            name: Annotated[str, UNIQUE] = "unnamed"
 
         Tag.X = Tag()
         Tag.Y = Tag(name="why")
@@ -469,7 +468,7 @@ class TestDefault:
     def test_default_override(self) -> None:
         class Thing(DataEnum):
             __members__ = ("A",)
-            value: Annotated[int, Default(42)]
+            value: int = 42
 
         Thing.A = Thing(value=99)
         assert Thing.A.value == 99
@@ -478,7 +477,7 @@ class TestDefault:
         class Mixed(DataEnum):
             __members__ = ("A",)
             required: str
-            optional: Annotated[str, Default("default")]
+            optional: str = "default"
 
         with pytest.raises(TypeError, match=r"Missing required.*required"):
             Mixed(optional="ok")
@@ -487,7 +486,7 @@ class TestDefault:
         class Status(DataEnum):
             __members__ = ("ON", "OFF", "STANDBY")
             label: str
-            active: Annotated[bool, Default(True)]  # noqa: FBT003
+            active: bool = True  # noqa: FBT001
 
         Status.ON = Status(label="On")
         Status.OFF = Status(label="Off", active=False)  # noqa: FBT003

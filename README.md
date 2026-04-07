@@ -25,7 +25,7 @@ pip install data-enum
 ```py
 from typing import Annotated
 
-from data_enum import DataEnum, Default, UNIQUE, UniqueTogether
+from data_enum import DataEnum, UNIQUE, UniqueTogether
 
 class Currency(DataEnum):
     __members__ = ("USD", "EUR", "GBP")
@@ -82,7 +82,7 @@ Currency.USD == Currency.USD  # True
 
 ### Default values
 
-Use `Default(...)` in `Annotated` to make attributes optional:
+Use standard Python default syntax to make attributes optional:
 
 ```py
 class Currency(DataEnum):
@@ -91,16 +91,16 @@ class Currency(DataEnum):
     symbol: str
     name: str
     code: Annotated[str, UNIQUE]
-    active: Annotated[bool, Default(True)]
+    active: bool = True
 
 Currency.USD = Currency(symbol="$", name="US Dollar", code="USD")           # active=True
 Currency.EUR = Currency(symbol="€", name="Euro", code="EUR", active=False)  # active=False
 ```
 
-`Default` can be combined with `UNIQUE` in any order:
+Defaults work with `Annotated` types too:
 
 ```py
-tag: Annotated[str, UNIQUE, Default("none")]
+tag: Annotated[str, UNIQUE] = "none"
 ```
 
 ### Unique-together constraints
@@ -128,7 +128,7 @@ State.get(country="US", code="CA")  # State.CA_US
 State.get(country="CA", code="ON")  # State.ON_CA
 ```
 
-`UniqueTogether` works alongside `UNIQUE` and `Default`:
+`UniqueTogether` works alongside `UNIQUE` and defaults:
 
 ```py
 class Place(DataEnum):
@@ -137,7 +137,16 @@ class Place(DataEnum):
     country: Annotated[str, UniqueTogether("location")]
     code: Annotated[str, UniqueTogether("location")]
     full_name: Annotated[str, UNIQUE]
-    active: Annotated[bool, Default(True)]
+    active: bool = True
+```
+
+### Type checker support
+
+DataEnum uses PEP 681 (`@dataclass_transform`) so type checkers (mypy, pyright, ty) understand the constructor signature generated from your annotations:
+
+```py
+Currency(symbol="$", name="US Dollar", code="USD")  # type checker knows these kwargs
+Currency(symbol="$")                                  # type checker flags missing args
 ```
 
 ### No-data enums
