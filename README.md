@@ -25,7 +25,7 @@ pip install data-enum
 ```py
 from typing import Annotated
 
-from data_enum import DataEnum, UNIQUE
+from data_enum import DataEnum, Default, UNIQUE, UniqueTogether
 
 class Currency(DataEnum):
     __members__ = ("USD", "EUR", "GBP")
@@ -78,6 +78,66 @@ Currency.USD == Currency.USD  # True
 
 {Currency.USD, Currency.EUR}  # works in sets
 {Currency.USD: "dollar"}      # works as dict keys
+```
+
+### Default values
+
+Use `Default(...)` in `Annotated` to make attributes optional:
+
+```py
+class Currency(DataEnum):
+    __members__ = ("USD", "EUR", "GBP")
+
+    symbol: str
+    name: str
+    code: Annotated[str, UNIQUE]
+    active: Annotated[bool, Default(True)]
+
+Currency.USD = Currency(symbol="$", name="US Dollar", code="USD")           # active=True
+Currency.EUR = Currency(symbol="€", name="Euro", code="EUR", active=False)  # active=False
+```
+
+`Default` can be combined with `UNIQUE` in any order:
+
+```py
+tag: Annotated[str, UNIQUE, Default("none")]
+```
+
+### Unique-together constraints
+
+Use `UniqueTogether("group_name")` to enforce that a combination of attributes is unique:
+
+```py
+class State(DataEnum):
+    __members__ = ("CA_US", "TX_US", "ON_CA", "BC_CA")
+
+    country: Annotated[str, UniqueTogether("location")]
+    code: Annotated[str, UniqueTogether("location")]
+    name: str
+
+State.CA_US = State(country="US", code="CA", name="California")
+State.TX_US = State(country="US", code="TX", name="Texas")
+State.ON_CA = State(country="CA", code="ON", name="Ontario")
+State.BC_CA = State(country="CA", code="BC", name="British Columbia")
+```
+
+Individual attributes can repeat (`country="US"` appears twice), but the combination must be unique. Look up by passing all group attributes to `get()`:
+
+```py
+State.get(country="US", code="CA")  # State.CA_US
+State.get(country="CA", code="ON")  # State.ON_CA
+```
+
+`UniqueTogether` works alongside `UNIQUE` and `Default`:
+
+```py
+class Place(DataEnum):
+    __members__ = ("A", "B")
+
+    country: Annotated[str, UniqueTogether("location")]
+    code: Annotated[str, UniqueTogether("location")]
+    full_name: Annotated[str, UNIQUE]
+    active: Annotated[bool, Default(True)]
 ```
 
 ### No-data enums

@@ -9,6 +9,29 @@ _MISSING = object()
 UNIQUE = object()
 
 
+class Default:
+    """Marker for default attribute values in Annotated type hints."""
+
+    __slots__ = ("value",)
+
+    def __init__(self, value: Any) -> None:  # noqa: ANN401
+        """Store the default value."""
+        self.value = value
+
+
+class UniqueTogether:
+    """Marker for composite unique constraints in Annotated type hints.
+
+    Attributes sharing the same group name form a composite unique constraint.
+    """
+
+    __slots__ = ("group",)
+
+    def __init__(self, group: str) -> None:
+        """Store the group name."""
+        self.group = group
+
+
 class ConfigurationError(Exception):
     """An error to be thrown when DataEnum is not set up correctly."""
 
@@ -75,6 +98,8 @@ class DataEnumMeta(type):
 
         data_attrs: dict[str, type] = {}
         unique_attrs: set[str] = set()
+        default_attrs: dict[str, Any] = {}
+        unique_together_map: dict[str, list[str]] = {}  # group -> [attr_names]
 
         for attr_name, annotation in annotations.items():
             if attr_name.startswith("_"):
@@ -83,9 +108,22 @@ class DataEnumMeta(type):
                 args = get_args(annotation)
                 if UNIQUE in args:
                     unique_attrs.add(attr_name)
+                for arg in args[1:]:
+                    if isinstance(arg, Default):
+                        default_attrs[attr_name] = arg.value
+                    elif isinstance(arg, UniqueTogether):
+                        unique_together_map.setdefault(arg.group, []).append(attr_name)
                 data_attrs[attr_name] = args[0]
             else:
                 data_attrs[attr_name] = annotation
+
+        # Validate unique-together groups have at least 2 attributes
+        for group_name, group_attrs in unique_together_map.items():
+            if len(group_attrs) < 2:  # noqa: PLR2004
+                raise ConfigurationError(
+                    f"UniqueTogether group {group_name!r} must have at least 2 attributes; "
+                    f"found only {group_attrs[0]!r}. Use UNIQUE for single-attribute uniqueness",
+                )
 
         for attr_name in data_attrs:
             if attr_name in reserved:
@@ -101,15 +139,28 @@ class DataEnumMeta(type):
 
         enum_cls = super().__new__(mcs, name, bases, namespace)
 
+        # Freeze unique-together groups as tuples (preserving annotation order)
+        unique_together_groups: dict[str, tuple[str, ...]] = {
+            gn: tuple(ga) for gn, ga in unique_together_map.items()
+        }
+        # Build a reverse lookup: frozenset of attr names -> group name
+        unique_together_by_attrs: dict[frozenset[str], str] = {
+            frozenset(ga): gn for gn, ga in unique_together_groups.items()
+        }
+
         enum_cls._data_attrs = data_attrs
         enum_cls._unique_attrs = frozenset(unique_attrs)
+        enum_cls._default_attrs = default_attrs
+        enum_cls._unique_together_groups = unique_together_groups
+        enum_cls._unique_together_by_attrs = unique_together_by_attrs
         enum_cls._members_decl = members_decl
         enum_cls._member_map: dict[str, DataEnum] = {}
-        enum_cls._unique_indexes: dict[str, dict[Any, DataEnum]] = {
-            attr: {} for attr in unique_attrs
+        enum_cls._unique_indexes: dict[str, dict[Any, DataEnum]] = {ua: {} for ua in unique_attrs}
+        enum_cls._unique_together_indexes: dict[str, dict[tuple[Any, ...], DataEnum]] = {
+            gn: {} for gn in unique_together_groups
         }
         enum_cls._non_unique_indexes: dict[str, dict[Any, frozenset[DataEnum]]] = {
-            attr: {} for attr in data_attrs if attr not in unique_attrs
+            da: {} for da in data_attrs if da not in unique_attrs
         }
         enum_cls._is_complete = len(members_decl) == 0
         enum_cls._instances_created = 0
@@ -144,6 +195,17 @@ class DataEnumMeta(type):
                         f"Duplicate value {attr_value!r} for unique attribute {attr!r}",
                     )
                 attr_index[attr_value] = value
+
+            # Index unique-together groups
+            for group_name, group_attrs in cls._unique_together_groups.items():
+                composite_key = tuple(getattr(value, ga) for ga in group_attrs)
+                group_index = cls._unique_together_indexes[group_name]
+                if composite_key in group_index:
+                    attr_desc = ", ".join(f"{ga}={getattr(value, ga)!r}" for ga in group_attrs)
+                    raise ConfigurationError(
+                        f"Duplicate values for unique-together group {group_name!r}: {attr_desc}",
+                    )
+                group_index[composite_key] = value
 
             # Index non-unique attributes
             for attr in cls._non_unique_indexes:
@@ -198,16 +260,22 @@ class DataEnum(metaclass=DataEnumMeta):  # noqa: WPS338
             )
         enum_cls._instances_created += 1  # noqa: SLF001
 
-        missing = set(data_attrs) - set(kwargs)
-        if missing:
-            raise TypeError(
-                "Missing required attributes: {}".format(", ".join(sorted(missing))),
-            )
-
         extra = set(kwargs) - set(data_attrs)
         if extra:
             raise TypeError(
                 "Unknown attributes: {}".format(", ".join(sorted(extra))),
+            )
+
+        # Apply defaults for missing attributes
+        defaults = enum_cls._default_attrs  # noqa: SLF001
+        for attr_name, default_value in defaults.items():
+            if attr_name not in kwargs:
+                kwargs[attr_name] = default_value
+
+        missing = set(data_attrs) - set(kwargs)
+        if missing:
+            raise TypeError(
+                "Missing required attributes: {}".format(", ".join(sorted(missing))),
             )
 
         for attr, attr_value in kwargs.items():
@@ -282,18 +350,30 @@ class DataEnum(metaclass=DataEnumMeta):  # noqa: WPS338
             # Name lookup
             return cls._get_by_name(_name, default)
 
-        if len(kwargs) != 1:
+        if len(kwargs) == 1:
+            attr, attr_value = next(iter(kwargs.items()))
+            if attr not in cls._unique_attrs:
+                raise TypeError(
+                    f"{attr!r} is not a unique attribute of {cls.__name__}",
+                )
+            return cls._get_by_unique_attr(attr, attr_value, default)
+
+        # Multiple kwargs: check for unique-together group match
+        kwarg_keys = frozenset(kwargs)
+        group_name = cls._unique_together_by_attrs.get(kwarg_keys)
+        if group_name is not None:
+            return cls._get_by_unique_together(group_name, kwargs, default)
+
+        if not kwargs:
             raise TypeError(
-                "get() requires exactly one argument: a member name or a unique attribute",
+                "get() requires a member name, a unique attribute, "
+                "or a unique-together attribute group",
             )
 
-        attr, attr_value = next(iter(kwargs.items()))
-        if attr not in cls._unique_attrs:
-            raise TypeError(
-                f"{attr!r} is not a unique attribute of {cls.__name__}",
-            )
-
-        return cls._get_by_unique_attr(attr, attr_value, default)
+        raise TypeError(
+            f"No unique or unique-together constraint matches "
+            f"attributes: {', '.join(sorted(kwargs))}",
+        )
 
     @classmethod
     def filter(cls, **kwargs: Any) -> frozenset[Any]:  # noqa: ANN401
@@ -346,4 +426,25 @@ class DataEnum(metaclass=DataEnumMeta):  # noqa: WPS338
             return default
         raise MemberDoesNotExistError(
             f"No {cls.__name__} with {attr}={attr_value!r}",
+        )
+
+    @classmethod
+    def _get_by_unique_together(
+        cls,
+        group_name: str,
+        kwargs: dict[str, Any],
+        default: Any,  # noqa: ANN401
+    ) -> Any:  # noqa: ANN401
+        """Look up a member by a unique-together composite key."""
+        group_attrs = cls._unique_together_groups[group_name]
+        composite_key = tuple(kwargs[attr] for attr in group_attrs)
+        group_index = cls._unique_together_indexes[group_name]
+        member = group_index.get(composite_key, _MISSING)
+        if member is not _MISSING:
+            return member
+        if default is not _MISSING:
+            return default
+        attr_desc = ", ".join(f"{attr}={kwargs[attr]!r}" for attr in group_attrs)
+        raise MemberDoesNotExistError(
+            f"No {cls.__name__} with {attr_desc}",
         )

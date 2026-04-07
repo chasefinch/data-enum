@@ -8,7 +8,14 @@ from typing import Annotated
 import pytest
 
 # Data Enum
-from data_enum import UNIQUE, ConfigurationError, DataEnum, MemberDoesNotExistError
+from data_enum import (
+    UNIQUE,
+    ConfigurationError,
+    DataEnum,
+    Default,
+    MemberDoesNotExistError,
+    UniqueTogether,
+)
 
 
 class Currency(DataEnum):
@@ -266,7 +273,7 @@ class TestGet:
             Currency.get(symbol="$")
 
     def test_get_no_args(self) -> None:
-        with pytest.raises(TypeError, match="exactly one argument"):
+        with pytest.raises(TypeError, match="requires a member name"):
             Currency.get()
 
     def test_get_mixed_args(self) -> None:
@@ -274,7 +281,7 @@ class TestGet:
             Currency.get("USD", code="USD")
 
     def test_get_multiple_kwargs(self) -> None:
-        with pytest.raises(TypeError, match="exactly one argument"):
+        with pytest.raises(TypeError, match="No unique"):
             Currency.get(code="USD", name="US Dollar")
 
     def test_get_before_complete(self) -> None:
@@ -421,3 +428,181 @@ class TestAttributeAccess:
         assert Currency.EUR.symbol == "€"
         assert Currency.EUR.name == "Euro"
         assert Currency.GBP.symbol == "£"
+
+
+class TestDefault:
+    """Test Default(...) for attribute default values."""
+
+    def test_default_applied(self) -> None:
+        class Status(DataEnum):
+            __members__ = ("ACTIVE", "INACTIVE")
+            label: str
+            enabled: Annotated[bool, Default(True)]  # noqa: FBT003
+
+        Status.ACTIVE = Status(label="Active")
+        Status.INACTIVE = Status(label="Inactive", enabled=False)  # noqa: FBT003
+        assert Status.ACTIVE.enabled is True
+        assert Status.INACTIVE.enabled is False
+
+    def test_default_with_unique(self) -> None:
+        class Item(DataEnum):
+            __members__ = ("A", "B")
+            code: Annotated[str, UNIQUE]
+            priority: Annotated[int, Default(0)]
+
+        Item.A = Item(code="a", priority=5)
+        Item.B = Item(code="b")
+        assert Item.A.priority == 5
+        assert Item.B.priority == 0
+
+    def test_unique_and_default_combined(self) -> None:
+        class Tag(DataEnum):
+            __members__ = ("X", "Y")
+            name: Annotated[str, UNIQUE, Default("unnamed")]
+
+        Tag.X = Tag()
+        Tag.Y = Tag(name="why")
+        assert Tag.X.name == "unnamed"
+        assert Tag.Y.name == "why"
+        assert Tag.get(name="why") is Tag.Y
+
+    def test_default_override(self) -> None:
+        class Thing(DataEnum):
+            __members__ = ("A",)
+            value: Annotated[int, Default(42)]
+
+        Thing.A = Thing(value=99)
+        assert Thing.A.value == 99
+
+    def test_missing_required_with_defaults(self) -> None:
+        class Mixed(DataEnum):
+            __members__ = ("A",)
+            required: str
+            optional: Annotated[str, Default("default")]
+
+        with pytest.raises(TypeError, match=r"Missing required.*required"):
+            Mixed(optional="ok")
+
+    def test_filter_on_default_value(self) -> None:
+        class Status(DataEnum):
+            __members__ = ("ON", "OFF", "STANDBY")
+            label: str
+            active: Annotated[bool, Default(True)]  # noqa: FBT003
+
+        Status.ON = Status(label="On")
+        Status.OFF = Status(label="Off", active=False)  # noqa: FBT003
+        Status.STANDBY = Status(label="Standby")
+        result = Status.filter(active=True)
+        assert result == frozenset((Status.ON, Status.STANDBY))
+
+
+class TestUniqueTogether:
+    """Test UniqueTogether(...) for composite unique constraints."""
+
+    def test_basic_unique_together(self) -> None:
+        class State(DataEnum):
+            __members__ = ("CA_US", "TX_US", "ON_CA", "BC_CA")
+            country: Annotated[str, UniqueTogether("location")]
+            code: Annotated[str, UniqueTogether("location")]
+            name: str
+
+        State.CA_US = State(country="US", code="CA", name="California")
+        State.TX_US = State(country="US", code="TX", name="Texas")
+        State.ON_CA = State(country="CA", code="ON", name="Ontario")
+        State.BC_CA = State(country="CA", code="BC", name="British Columbia")
+
+        # Same country (US, US) is fine
+        # Same code (CA, CA) is fine
+        # But (US, CA) + (US, CA) would not be
+        assert State.get(country="US", code="CA") is State.CA_US
+        assert State.get(country="CA", code="ON") is State.ON_CA
+
+    def test_duplicate_composite_rejected(self) -> None:
+        class State(DataEnum):
+            __members__ = ("A", "B")
+            country: Annotated[str, UniqueTogether("loc")]
+            code: Annotated[str, UniqueTogether("loc")]
+
+        State.A = State(country="US", code="CA")
+        with pytest.raises(ConfigurationError, match=r"Duplicate values.*unique-together"):
+            State.B = State(country="US", code="CA")
+
+    def test_get_unique_together_default(self) -> None:
+        class State(DataEnum):
+            __members__ = ("A",)
+            country: Annotated[str, UniqueTogether("loc")]
+            code: Annotated[str, UniqueTogether("loc")]
+
+        State.A = State(country="US", code="CA")
+        assert State.get(country="US", code="XX", default=None) is None
+        assert State.get(country="US", code="XX", default=State.A) is State.A
+
+    def test_get_unique_together_not_found(self) -> None:
+        class State(DataEnum):
+            __members__ = ("A",)
+            country: Annotated[str, UniqueTogether("loc")]
+            code: Annotated[str, UniqueTogether("loc")]
+
+        State.A = State(country="US", code="CA")
+        with pytest.raises(MemberDoesNotExistError, match="No State"):
+            State.get(country="XX", code="YY")
+
+    def test_get_mismatched_kwargs(self) -> None:
+        class State(DataEnum):
+            __members__ = ("A",)
+            country: Annotated[str, UniqueTogether("loc")]
+            code: Annotated[str, UniqueTogether("loc")]
+            name: str
+
+        State.A = State(country="US", code="CA", name="California")
+        with pytest.raises(TypeError, match="No unique"):
+            State.get(country="US", name="California")
+
+    def test_single_attr_group_rejected(self) -> None:
+        with pytest.raises(ConfigurationError, match="at least 2 attributes"):
+
+            class Bad(DataEnum):
+                __members__ = ("A",)
+                solo: Annotated[str, UniqueTogether("group")]
+
+    def test_multiple_groups(self) -> None:
+        class Record(DataEnum):
+            __members__ = ("A", "B")
+            region: Annotated[str, UniqueTogether("geo")]
+            zone: Annotated[str, UniqueTogether("geo")]
+            dept: Annotated[str, UniqueTogether("org")]
+            team: Annotated[str, UniqueTogether("org")]
+
+        Record.A = Record(region="US", zone="west", dept="eng", team="core")
+        Record.B = Record(region="US", zone="east", dept="eng", team="infra")
+
+        assert Record.get(region="US", zone="west") is Record.A
+        assert Record.get(region="US", zone="east") is Record.B
+        assert Record.get(dept="eng", team="infra") is Record.B
+
+    def test_unique_together_with_unique(self) -> None:
+        class Place(DataEnum):
+            __members__ = ("A", "B")
+            country: Annotated[str, UniqueTogether("loc")]
+            code: Annotated[str, UniqueTogether("loc")]
+            full_name: Annotated[str, UNIQUE]
+
+        Place.A = Place(country="US", code="CA", full_name="California")
+        Place.B = Place(country="CA", code="ON", full_name="Ontario")
+
+        # Look up by unique attr
+        assert Place.get(full_name="California") is Place.A
+        # Look up by unique-together
+        assert Place.get(country="CA", code="ON") is Place.B
+
+    def test_filter_still_single_attr(self) -> None:
+        class State(DataEnum):
+            __members__ = ("A", "B")
+            country: Annotated[str, UniqueTogether("loc")]
+            code: Annotated[str, UniqueTogether("loc")]
+
+        State.A = State(country="US", code="CA")
+        State.B = State(country="US", code="TX")
+
+        result = State.filter(country="US")
+        assert result == frozenset((State.A, State.B))
