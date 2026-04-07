@@ -1,0 +1,39 @@
+# See https://www.chasefinch.com/nitpick-style.toml
+
+line-length = 99
+target-version = "py313"
+output-format = "grouped"
+
+[lint]
+allowed-confusables = ["\u2018", "\u2019", "\u00d7", "\u2013"]
+select = ["ALL"]
+ignore = [
+	# General configuration (see https://www.chasefinch.com/nitpick-style.toml)
+	"D203", "D213", "TID252", "S101", "INT001",  # Rule conflicts
+	"COM812", "ISC001", "Q000", "Q003",  # Recommended when using formatter
+	"RUF100", "RUF102",  # Conflicts with WPS
+	"ARG",  # Unused arguments often required in heirarchy
+	"ERA",  # Commented-out code is OK
+	"S105", "S106",  # Don't sniff for secrets
+	"S311",  # Random is OK. Don't use them for "cryptographic purpses"
+	"S308",  # Mark safe is OK
+	"S610",  # Django "extra" is OK
+	"E731", "B023",  # Lambda & unbound lambda is OK
+	"B024",  # Allow ABCs without abstract methods
+	"BLE001",  # Allow catching bare exception explicitly
+	"FIX002", "TD003",  # Allow fully-formed TODOs
+	"G", "EM", "TRY",  # Log formatting
+	"PT",  # Test conventions (Use a regular `assert` instead of unittest-style `assertIn`)
+
+	# Specific opt-outs
+	"C", "PLR09",  # Complexity rules
+]
+
+[lint.isort]
+combine-as-imports = true
+detect-same-package = true
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder", "django"]
+order-by-type = true
+
+[lint.pycodestyle]
+max-doc-length = 79

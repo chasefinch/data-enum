@@ -1,10 +1,11 @@
 """Define metadata for DataEnum."""
 
 # Third Party
+from pathlib import Path
+
 import setuptools
 
-with open("README.md", "r") as readme_file:
-    long_description = readme_file.read()
+long_description = Path("README.md").read_text()
 
 setuptools.setup(
     name="data-enum",
@@ -19,13 +20,13 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.11",
     install_requires=[],
 )

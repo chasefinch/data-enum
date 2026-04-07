@@ -1,8 +1,8 @@
 # Data Enums
 
-![Python 3.6+](https://img.shields.io/badge/python-3.6%2B-blue) [![Build Status](https://travis-ci.com/chasefinch/amp-renderer.svg?branch=main)](https://travis-ci.com/chasefinch/data-enum) ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+[![Build Status](https://github.com/chasefinch/data-enum/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/chasefinch/data-enum/actions/workflows/build.yml) ![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25-brightgreen) [![PyPI version](https://img.shields.io/pypi/v/data-enum)](https://pypi.org/project/data-enum/)
 
-An alternative to the built-in Python `enum` implementation. Tested in Python 3.8 and above, but works on Python 3.6+.
+An alternative to the built-in Python `enum` implementation. Supports Python 3.11+.
 
 Data enums allow you to:
 
@@ -11,19 +11,19 @@ Data enums allow you to:
 - Define pure enums without using `auto()`
 - Define value-based enums without storing them as class attributes
 - Define secondary unique keys & use them to look up enum members
-- Use classmethod syntax (`.get(…)`) to look up members, instead of using initializers
+- Use classmethod syntax (`.get(...)`) to look up members, instead of using initializers
 
 ## Usage
 
 Install via PyPI:
 
-``` bash
+```bash
 pip install data-enum
 ```
 
 Minimal usage:
 
-``` py
+```py
 from data_enum import DataEnum
 
 class Currency(DataEnum):
@@ -36,7 +36,7 @@ Currency('EUR', symbol='€', name='Euro')
 
 Access the members by value:
 
-``` py
+```py
 Currency.get('USD')
 Currency.get('CAD')
 Currency.get('EUR')
@@ -44,7 +44,7 @@ Currency.get('EUR')
 
 Store the members as attributes:
 
-``` py
+```py
 class Currency(DataEnum):
     data_attrs = ('symbol', 'name')
 
@@ -55,7 +55,7 @@ Currency.EUR = Currency('EUR', symbol='€', name='Euro')
 
 Use a custom attribute as the primary ID:
 
-``` py
+```py
 class Currency(DataEnum):
     primary_attr = 'code'
     data_attrs = ('symbol', 'name')
@@ -67,7 +67,7 @@ Currency('EUR', symbol='€', name='Euro')
 
 Use integers as primary IDs:
 
-``` py
+```py
 class Door(DataEnum):
     data_attrs = ('description',)
 
@@ -82,7 +82,7 @@ int(d2)  # returns 2
 
 Or, skip primary IDs altogether for a pure enumeration:
 
-``` py
+```py
 from data_enum import DataEnum
 
 class Currency(DataEnum):
@@ -95,7 +95,7 @@ Currency.EUR = Currency(symbol='€', name='Euro')
 
 Access the attached data:
 
-``` py
+```py
 print(Currency.USD.name)  # prints 'United States dollar'
 print(Currency.EUR.symbol)  # prints '€'
 
@@ -104,14 +104,14 @@ print(Currency.USD)  # prints 'USD'
 
 Compare directly:
 
-``` py
+```py
 Currency.USD == Currency.CAD  # returns False
 Currency.EUR == Currency.EUR  # returns True
 ```
 
 Enforce unique secondary attributes:
 
-``` py
+```py
 class Currency(DataEnum):
     # Use a tuple with the second value as True for unique keys
     data_attrs = (('symbol', True), 'name')
@@ -123,41 +123,42 @@ Currency('USD', symbol='$', name='United States dollar')
 
 Look up members by unique secondary attributes:
 
-``` py
+```py
 Currency.get(symbol='€')  # returns Currency.EUR
 Currency.get(symbol='&')  # throws MemberDoesNotExistError
 ```
 
 Look up with members with defaults:
 
-``` py
+```py
 Currency.get('ZZZ', Currency.USD)  # returns Currency.USD
 Currency.get('ZZZ', default=Currency.USD)  # returns Currency.USD
 Currency.get(symbol='&', default=Currency.USD)  # returns Currency.USD
 ```
 
-## Testing, etc.
+## Development
 
-Install development requirements (Requires Python >= 3.8):
+Set up the development environment:
 
-``` bash
-make install
+```bash
+make setup
+source .venv/bin/activate
 ```
 
-Sort imports:
+Run the full pipeline:
 
-``` bash
-make format
+```bash
+make
 ```
 
-Lint:
+| Task | Command |
+|---|---|
+| **Full pipeline** | `make` (sync, configure, format, lint, check, test) |
+| **Format** | `make format` |
+| **Lint** | `make lint` (format first!) |
+| **Type check** | `make check` |
+| **Test** | `make test` |
 
-``` bash
-make lint
-```
+## License
 
-Test:
-
-``` bash
-make test
-```
+Licensed under the Apache License, Version 2.0.

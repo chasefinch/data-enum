@@ -1,5 +1,9 @@
 """An alternative to the built-in Python `enum` implementation."""
 
+from __future__ import annotations
+
+from typing import Any
+
 
 class ConfigurationError(Exception):
     """An error to be thrown when DataEnum is not set up correctly."""
@@ -15,7 +19,7 @@ DEFAULT_PRIMARY_ATTR = "_id_"
 class DataEnumType(type):
     """Metaclass for custom class-level functionality for DataEnum."""
 
-    def __init__(cls, *args):
+    def __init__(cls, *args: Any) -> None:  # noqa: ANN401
         """Define the new type in place."""
         cls.primary_attr = getattr(cls, "primary_attr", DEFAULT_PRIMARY_ATTR)
 
@@ -43,19 +47,19 @@ class DataEnumType(type):
         # Set this here so that each type definition gets their own set.
         cls.members = []
 
-    def _get_member_dict_by_attr(cls, attr):
+    def _get_member_dict_by_attr(cls, attr: str) -> dict[Any, DataEnum]:
         """Return the members as a dictionary.
 
         The dictionary can be ordered by any unique attribute or the primary
         key attribute.
         """
-        if attr != cls.primary_attr and attr not in cls._data_attrs_flat_unique:
-            raise AttributeError('"{}" has no attribute "{}"'.format(cls.__name__, attr))
+        if attr != cls.primary_attr and attr not in cls._data_attrs_flat_unique:  # noqa: SLF001
+            raise AttributeError(f'"{cls.__name__}" has no attribute "{attr}"')
 
         return {getattr(member, attr): member for member in cls.members}
 
     @property
-    def _data_attrs_flat(cls):
+    def _data_attrs_flat(cls) -> tuple[str, ...]:
         """Return a flat list of data attribute names.
 
         `data_attrs` accepts tuples in the form of ('name', True) which would
@@ -65,16 +69,13 @@ class DataEnumType(type):
         This flattens those tuples for internal use, ignoring the second value
         of the tuple.
         """
-        flat_names = []
-        for name in getattr(cls, "data_attrs", ()):
-            if isinstance(name, (tuple, list)):
-                flat_names.append(name[0])
-            else:
-                flat_names.append(name)
-        return tuple(flat_names)
+        return tuple(
+            name[0] if isinstance(name, (tuple, list)) else name
+            for name in getattr(cls, "data_attrs", ())
+        )
 
     @property
-    def _data_attrs_flat_unique(cls):
+    def _data_attrs_flat_unique(cls) -> tuple[str, ...]:
         """Return a flat list of unique data attribute names.
 
         `data_attrs` accepts tuples in the form of ('name', True)
@@ -84,17 +85,17 @@ class DataEnumType(type):
         This returns only the names of data attributes which have been marked
         as unique.
         """
-        flat_names = []
-        for name in getattr(cls, "data_attrs", ()):
-            if isinstance(name, (tuple, list)) and name[1]:
-                flat_names.append(name[0])
-        return tuple(flat_names)
+        return tuple(
+            name[0]
+            for name in getattr(cls, "data_attrs", ())
+            if isinstance(name, (tuple, list)) and name[1]
+        )
 
 
 class DataEnum(metaclass=DataEnumType):
     """An implementation of Enum that allows attached static data."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         """Initialize the DataEnum."""
         self.is_auto = False
 
@@ -116,7 +117,7 @@ class DataEnum(metaclass=DataEnumType):
         num_args = len(args_list)
 
         # Get a list of data attribute names
-        data_attrs_flat = type(self)._data_attrs_flat
+        data_attrs_flat = type(self)._data_attrs_flat  # noqa: SLF001
         num_attrs = len(data_attrs_flat)
 
         # Make sure there aren't too many positional args
@@ -145,7 +146,7 @@ class DataEnum(metaclass=DataEnumType):
             setattr(self, keyword, value)
 
         # Check for a duplicate value for a unique attribute
-        unique_attrs = (self._primary_attr,) + type(self)._data_attrs_flat_unique
+        unique_attrs = (self._primary_attr, *type(self)._data_attrs_flat_unique)  # noqa: SLF001
         for attr in unique_attrs:
             value = getattr(self, attr)
 
@@ -158,12 +159,12 @@ class DataEnum(metaclass=DataEnumType):
         self.members.append(self)
 
     @classmethod
-    def get(cls, *args, **kwargs):
+    def get(cls, *args: Any, **kwargs: Any) -> DataEnum:  # noqa: ANN401
         """Look up a member of the enumeration."""
         has_default = False
         bail_if_auto = False
 
-        if len(args) == 2:
+        if len(args) == 2:  # noqa: PLR2004
             # Two positional arguments; the second one is the default
             has_default = True
             # A default exists, even if it's None
@@ -174,8 +175,7 @@ class DataEnum(metaclass=DataEnumType):
             try:
                 default = kwargs.pop("default")
             except KeyError:
-                # No default; will throw an error if the member can't be found
-                pass
+                """No default; will throw if the member can't be found."""
             else:
                 # A default exists, even if it's None
                 has_default = True
@@ -196,7 +196,7 @@ class DataEnum(metaclass=DataEnumType):
             attr = next(iter(kwargs))
             if attr == DEFAULT_PRIMARY_ATTR:
                 # Don't expose the default ID by keyword
-                raise AttributeError('Attribute "{}" not found'.format(cls.primary_attr))
+                raise AttributeError(f'Attribute "{cls.primary_attr}" not found')
 
             value = kwargs[attr]
 
@@ -207,50 +207,50 @@ class DataEnum(metaclass=DataEnumType):
         except KeyError:
             if not has_default:
                 # No default available
-                raise MemberDoesNotExistError()
+                raise MemberDoesNotExistError from None
 
             # Return the passed-in default
             return default
 
         if member.is_auto and bail_if_auto:
             # Don't expose the default ID if it's auto generated
-            raise MemberDoesNotExistError()
+            raise MemberDoesNotExistError
 
         return member
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Determine whether two members are equal based on their ID."""
         try:
             return self._member_id == other._member_id
         except AttributeError:
             return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Return a hash of only the ID, since that's what's needed for EQ."""
         return hash(self._member_id)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return the member ID as a string."""
         return str(self._member_id)
 
-    def __int__(self):
+    def __int__(self) -> int:
         """Return the member ID as an int, if it can be cast to one."""
         return int(self._member_id)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a full python-friendly representation of the member."""
         enum_type = type(self)
-        attr_values = ((attr, getattr(self, attr)) for attr in enum_type._data_attrs_flat)
+        attr_values = ((attr, getattr(self, attr)) for attr in enum_type._data_attrs_flat)  # noqa: SLF001
         return "{type}({pk}{args})".format(
             type=enum_type.__name__,
             pk=repr(self._member_id),
-            args="".join((", {}={}".format(attr, repr(value)) for (attr, value) in attr_values)),
+            args="".join(f", {attr}={value!r}" for (attr, value) in attr_values),
         )
 
     @property
-    def _primary_attr(self):
+    def _primary_attr(self) -> str:
         return type(self).primary_attr
 
     @property
-    def _member_id(self):
+    def _member_id(self) -> Any:  # noqa: ANN401
         return getattr(self, self._primary_attr)

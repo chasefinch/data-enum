@@ -2,7 +2,6 @@
 
 # Standard Library
 import pickle
-import sys
 
 # Third Party
 import pytest
@@ -21,7 +20,7 @@ class IntEnum(DataEnum):
 class TestDataEnum:
     """Test the DataEnum class."""
 
-    def simple_setup(self):
+    def simple_setup(self) -> None:
         """Set up a default test enumeration."""
 
         class Currency(DataEnum):
@@ -80,21 +79,21 @@ class TestDataEnum:
 
         self.Currency = Currency
 
-    def test_simple(self):
+    def test_simple(self) -> None:
         """Test basic setup."""
         self.simple_setup()
 
-        assert self.Currency.AUD == self.Currency.get("AUD")
-        assert self.Currency.AUD == self.Currency.get("YYY", default=self.Currency.AUD)
+        assert self.Currency.get("AUD") == self.Currency.AUD
+        assert self.Currency.get("YYY", default=self.Currency.AUD) == self.Currency.AUD
 
-    def test_attrs_type_error(self):
+    def test_attrs_type_error(self) -> None:
         """Test value attribute error."""
         with pytest.raises(ConfigurationError):
 
             class TestEnum(DataEnum):
                 data_attrs = "value"
 
-    def test_attrs_error_1(self):
+    def test_attrs_error_1(self) -> None:
         """Test id attribute error."""
         with pytest.raises(ConfigurationError):
 
@@ -102,14 +101,14 @@ class TestDataEnum:
                 primary_attr = "id"
                 data_attrs = ("id",)
 
-    def test_attrs_error_2(self):
+    def test_attrs_error_2(self) -> None:
         """Test hidden attribute error."""
         with pytest.raises(ConfigurationError):
 
             class TestEnum(DataEnum):
                 data_attrs = ("_hidden",)
 
-    def test_nested_attrs(self):
+    def test_nested_attrs(self) -> None:
         """Test nested attributes."""
 
         class Currency(DataEnum):
@@ -123,7 +122,7 @@ class TestDataEnum:
             plural_name="United States dollars",
         )
 
-    def test_duplicate_element_error(self):
+    def test_duplicate_element_error(self) -> None:
         """Test invalid duplicate element declaration."""
 
         class Currency(DataEnum):
@@ -139,7 +138,7 @@ class TestDataEnum:
                 plural_name="United States dollars",
             )
 
-    def test_get(self):
+    def test_get(self) -> None:
         """Test member lookup."""
         self.simple_setup()
 
@@ -169,7 +168,7 @@ class TestDataEnum:
         with pytest.raises(MemberDoesNotExistError):
             self.Currency.get("AAA")
 
-    def test_init(self):
+    def test_init(self) -> None:
         """Test various enum definitions."""
 
         class Currency1(DataEnum):
@@ -237,7 +236,7 @@ class TestDataEnum:
                 plural_name="United States dollars",
             )
 
-    def test_other(self):
+    def test_other(self) -> None:
         """Test remaining builtin overrides."""
         self.simple_setup()
 
@@ -269,19 +268,10 @@ class TestDataEnum:
         with pytest.raises(MemberDoesNotExistError):
             TestAutoEnum.get(0)
 
-        if sys.version_info >= (3, 0):
-            repr_susan = "TestStringEnum('person A', name='Susan', age=13)"
-            repr_linda = "IntEnum(1, name='Linda')"
-            repr_sharon = "TestAutoEnum(0, name='Sharon')"
-        else:
-            repr_susan = "TestStringEnum(u'person A', name=u'Susan', age=13)"
-            repr_linda = "IntEnum(1, name=u'Linda')"
-            repr_sharon = "TestAutoEnum(0, name=u'Sharon')"
-
-        assert repr(susan) == repr_susan
-        assert repr(linda) == repr_linda
-        assert repr(sharon) == repr_sharon
+        assert repr(susan) == "TestStringEnum('person A', name='Susan', age=13)"
+        assert repr(linda) == "IntEnum(1, name='Linda')"
+        assert repr(sharon) == "TestAutoEnum(0, name='Sharon')"
 
         assert hash(linda) == hash(1)
 
-        assert linda == pickle.loads(pickle.dumps(linda))
+        assert linda == pickle.loads(pickle.dumps(linda))  # noqa: S301

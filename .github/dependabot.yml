@@ -1,10 +1,24 @@
 version: 2
 updates:
+  - package-ecosystem: "gitsubmodule"
+    target-branch: "main"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "05:00"
+      timezone: "America/New_York"
+    pull-request-branch-name:
+      separator: "-"
+
   - package-ecosystem: "pip"
     target-branch: "main"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "tuesday"
+      time: "05:00"
+      timezone: "America/New_York"
     open-pull-requests-limit: 100
     pull-request-branch-name:
       separator: "-"

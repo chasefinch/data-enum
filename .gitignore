@@ -1,11 +1,38 @@
-
+# Python
+/__pycache__/
 *.pyc
-.coverage
-py2/
-data_enum.egg-info
-build/
-prof/
-dist/
-bin/
-lib/
-pyvenv.cfg
+*.pyo
+*$py.class
+/.Python
+/build/
+/dist/
+/downloads/
+/eggs/
+/.eggs/
+/parts/
+/sdist/
+/wheels/
+/*.egg-info/
+/.installed.cfg
+/*.egg
+/.cache/
+/MANIFEST
+
+# Virtual environments
+/.venv/
+
+# IDE
+/.vscode/
+/.zed/
+/.idea/
+
+# Claude Code
+/.claude/worktrees/
+
+# Testing
+/.pytest_cache/
+/.coverage
+/htmlcov/
+
+# macOS
+.DS_Store
