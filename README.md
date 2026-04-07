@@ -1,6 +1,6 @@
 # Data Enums
 
-[![Build Status](https://github.com/chasefinch/data-enum/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/chasefinch/data-enum/actions/workflows/build.yml) ![Coverage: 90%+](https://img.shields.io/badge/coverage-90%25-brightgreen) [![PyPI version](https://img.shields.io/pypi/v/data-enum)](https://pypi.org/project/data-enum/)
+[![Build Status](https://github.com/chasefinch/data-enum/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/chasefinch/data-enum/actions/workflows/build.yml) ![Coverage: 10%0](https://img.shields.io/badge/coverage-100%25-brightgreen) [![PyPI version](https://img.shields.io/pypi/v/data-enum)](https://pypi.org/project/data-enum/)
 
 An alternative to the built-in Python `enum` implementation. Supports Python 3.11+.
 
