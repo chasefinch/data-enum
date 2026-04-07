@@ -4,5 +4,11 @@ python = ".venv"
 [rules]
 all = "error"
 
+[[overrides]]
+include = ["tests/*"]
+[overrides.rules]
+# DataEnum uses dynamic attribute setting (Currency.USD = Currency(...))
+unresolved-attribute = "ignore"
+
 [terminal]
 output-format = "full"
