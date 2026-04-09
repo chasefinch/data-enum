@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/chasefinch/data-enum/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/chasefinch/data-enum/actions/workflows/build.yml) ![Coverage: 10%0](https://img.shields.io/badge/coverage-100%25-brightgreen) [![PyPI version](https://img.shields.io/pypi/v/data-enum)](https://pypi.org/project/data-enum/)
 
-An alternative to the built-in Python `enum` implementation. Supports Python 3.11+.
+An alternative to the built-in Python `enum` implementation. Supports Python 3.11+, including free-threaded Python (3.14t).
 
 Data enums allow you to:
 
@@ -166,6 +166,10 @@ Direction.WEST = Direction()
 ```py
 Currency.members  # (Currency.USD, Currency.EUR, Currency.GBP)
 ```
+
+### Thread safety
+
+DataEnum is safe for use with free-threaded Python (3.14t, no-GIL). All runtime operations — `get()`, `filter()`, attribute access, iteration — are read-only on frozen data structures. Define your enum members at module load time (the normal usage pattern), and they are safe to access concurrently from any number of threads.
 
 ### Safety
 

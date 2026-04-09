@@ -114,10 +114,8 @@ jobs:
     needs: [configure, lint]
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.14t"]
       fail-fast: false
-    container:
-      image: python:${{ matrix.python-version }}
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
