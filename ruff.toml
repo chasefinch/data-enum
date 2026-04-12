@@ -35,8 +35,11 @@ ignore = [
 [lint.isort]
 combine-as-imports = true
 detect-same-package = true
-section-order = ["future", "standard-library", "third-party", "first-party", "local-folder", "django"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 order-by-type = true
 
 [lint.pycodestyle]
 max-doc-length = 79
+
+[lint.pep8-naming]
+classmethod-decorators = ["classmethod"]

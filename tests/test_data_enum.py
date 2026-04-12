@@ -1,13 +1,10 @@
 """Tests for DataEnum."""
 
-# Standard Library
 import pickle
 from typing import Annotated
 
-# Third Party
 import pytest
 
-# Data Enum
 from data_enum import (
     UNIQUE,
     ConfigurationError,

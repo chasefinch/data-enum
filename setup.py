@@ -1,6 +1,5 @@
 """Define metadata for DataEnum."""
 
-# Third Party
 from pathlib import Path
 
 import setuptools
