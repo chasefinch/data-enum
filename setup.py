@@ -8,7 +8,7 @@ long_description = Path("README.md").read_text()
 
 setuptools.setup(
     name="data-enum",
-    version="3.0.0",
+    version="3.0.1",
     author="Chase Finch",
     author_email="chase@finch.email",
     description="An alternative to the built-in Python `enum` implementation",

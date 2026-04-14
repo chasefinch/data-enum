@@ -153,9 +153,6 @@ class DataEnumMeta(type):
         enum_cls._unique_together_indexes: dict[str, dict[tuple[Any, ...], DataEnum]] = {
             gn: {} for gn in unique_together_groups
         }
-        enum_cls._non_unique_indexes: dict[str, dict[Any, frozenset[DataEnum]]] = {
-            da: {} for da in data_attrs if da not in unique_attrs
-        }
         enum_cls._is_complete = len(members_decl) == 0
         enum_cls._instances_created = 0
 
@@ -201,22 +198,8 @@ class DataEnumMeta(type):
                     )
                 group_index[composite_key] = value
 
-            # Index non-unique attributes
-            for attr in cls._non_unique_indexes:
-                attr_value = getattr(value, attr)
-                bucket = cls._non_unique_indexes[attr]
-                if attr_value not in bucket:
-                    bucket[attr_value] = set()
-                bucket[attr_value].add(value)
-
             # Check completeness
             if len(cls._member_map) == len(cls._members_decl):
-                # Freeze non-unique index sets
-                for attr in cls._non_unique_indexes:
-                    cls._non_unique_indexes[attr] = {
-                        key: frozenset(members)
-                        for key, members in cls._non_unique_indexes[attr].items()
-                    }
                 cls._is_complete = True
 
             type.__setattr__(cls, name, value)
@@ -395,8 +378,8 @@ class DataEnum(metaclass=DataEnumMeta):  # noqa: WPS338
                 )
             ) or frozenset()
 
-        # For non-unique attrs, check the non-unique index
-        return cls._non_unique_indexes[attr].get(attr_value, frozenset())
+        # For non-unique attrs, linear scan over members
+        return frozenset(member for member in cls.members if getattr(member, attr) == attr_value)
 
     @classmethod
     def _get_by_name(cls, name: Any, default: Any) -> Any:  # noqa: ANN401
