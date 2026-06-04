@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any, dataclass_transform, get_args, get_origin
+from typing import Annotated, Any, dataclass_transform, get_args, get_origin, override
 
 _MISSING = object()
 
@@ -148,16 +148,20 @@ class DataEnumMeta(type):
         enum_cls._unique_together_groups = unique_together_groups
         enum_cls._unique_together_by_attrs = unique_together_by_attrs
         enum_cls._members_decl = members_decl
-        enum_cls._member_map: dict[str, DataEnum] = {}
-        enum_cls._unique_indexes: dict[str, dict[Any, DataEnum]] = {ua: {} for ua in unique_attrs}
-        enum_cls._unique_together_indexes: dict[str, dict[tuple[Any, ...], DataEnum]] = {
+        member_map: dict[str, DataEnum] = {}
+        unique_indexes: dict[str, dict[Any, DataEnum]] = {ua: {} for ua in unique_attrs}
+        unique_together_indexes: dict[str, dict[tuple[Any, ...], DataEnum]] = {
             gn: {} for gn in unique_together_groups
         }
+        enum_cls._member_map = member_map
+        enum_cls._unique_indexes = unique_indexes
+        enum_cls._unique_together_indexes = unique_together_indexes
         enum_cls._is_complete = len(members_decl) == 0
         enum_cls._instances_created = 0
 
         return enum_cls
 
+    @override
     def __setattr__(cls, name: str, value: Any) -> None:  # noqa: ANN401
         """Intercept member assignment on the class."""
         if hasattr(cls, "_members_decl") and name in cls._members_decl:
@@ -258,34 +262,41 @@ class DataEnum(metaclass=DataEnumMeta):  # noqa: WPS338
         for attr, attr_value in kwargs.items():
             object.__setattr__(self, attr, attr_value)
 
+    @override
     def __setattr__(self, name: str, value: Any) -> None:  # noqa: ANN401
         """Prevent modification of member attributes."""
         raise AttributeError(
             f"{type(self).__name__} members are immutable",
         )
 
+    @override
     def __delattr__(self, name: str) -> None:  # noqa: WPS603
         """Prevent deletion of member attributes."""
         raise AttributeError(
             f"{type(self).__name__} members are immutable",
         )
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Members are equal only if they are the same object."""
         return self is other
 
+    @override
     def __hash__(self) -> int:
         """Hash by class and member name."""
         return hash((type(self).__name__, self._name))
 
+    @override
     def __repr__(self) -> str:
         """Return e.g. 'Currency.USD'."""
         return f"{type(self).__name__}.{self._name}"
 
+    @override
     def __str__(self) -> str:
         """Return the member name, e.g. 'USD'."""
         return self._name
 
+    @override
     def __reduce__(self) -> tuple[Any, ...]:  # noqa: WPS603
         """Support pickling by reconstituting via get()."""
         return (type(self).get, (self._name,))
