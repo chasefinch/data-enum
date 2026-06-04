@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any, dataclass_transform, get_args, get_origin, override
+from typing import Annotated, Any, dataclass_transform, get_args, get_origin
+
+from data_enum._compatibility import override
 
 _MISSING = object()
 
