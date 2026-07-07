@@ -3,5 +3,5 @@
 coverage==7.14.3
 pytest==9.1.1
 
-setuptools==82.0.1
+setuptools==83.0.0
 wheel==0.47.0
