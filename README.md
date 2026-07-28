@@ -27,12 +27,14 @@ from typing import Annotated
 
 from data_enum import DataEnum, UNIQUE, UniqueTogether
 
+
 class Currency(DataEnum):
     __members__ = ("USD", "EUR", "GBP")
 
     symbol: str
     name: str
     code: Annotated[str, UNIQUE]
+
 
 Currency.USD = Currency(symbol="$", name="US Dollar", code="USD")
 Currency.EUR = Currency(symbol="€", name="Euro", code="EUR")
@@ -42,24 +44,24 @@ Currency.GBP = Currency(symbol="£", name="Pound Sterling", code="GBP")
 ### Access data on members
 
 ```py
-Currency.USD.name      # 'US Dollar'
-Currency.EUR.symbol    # '€'
-str(Currency.USD)      # 'USD'
-repr(Currency.USD)     # 'Currency.USD'
+Currency.USD.name  # 'US Dollar'
+Currency.EUR.symbol  # '€'
+str(Currency.USD)  # 'USD'
+repr(Currency.USD)  # 'Currency.USD'
 ```
 
 ### Look up members by name
 
 ```py
-Currency.get("USD")                          # Currency.USD
-Currency.get("MISSING", default=None)        # None
+Currency.get("USD")  # Currency.USD
+Currency.get("MISSING", default=None)  # None
 Currency.get("MISSING", default=Currency.USD)  # Currency.USD
 ```
 
 ### Look up by unique attribute
 
 ```py
-Currency.get(code="EUR")                          # Currency.EUR
+Currency.get(code="EUR")  # Currency.EUR
 Currency.get(code="MISSING", default=Currency.USD)  # Currency.USD
 ```
 
@@ -77,7 +79,7 @@ Currency.USD == Currency.EUR  # False
 Currency.USD == Currency.USD  # True
 
 {Currency.USD, Currency.EUR}  # works in sets
-{Currency.USD: "dollar"}      # works as dict keys
+{Currency.USD: "dollar"}  # works as dict keys
 ```
 
 ### Default values
@@ -93,7 +95,8 @@ class Currency(DataEnum):
     code: Annotated[str, UNIQUE]
     active: bool = True
 
-Currency.USD = Currency(symbol="$", name="US Dollar", code="USD")           # active=True
+
+Currency.USD = Currency(symbol="$", name="US Dollar", code="USD")  # active=True
 Currency.EUR = Currency(symbol="€", name="Euro", code="EUR", active=False)  # active=False
 ```
 
@@ -114,6 +117,7 @@ class State(DataEnum):
     country: Annotated[str, UniqueTogether("location")]
     code: Annotated[str, UniqueTogether("location")]
     name: str
+
 
 State.CA_US = State(country="US", code="CA", name="California")
 State.TX_US = State(country="US", code="TX", name="Texas")
@@ -146,7 +150,7 @@ DataEnum uses PEP 681 (`@dataclass_transform`) so type checkers (mypy, pyright, 
 
 ```py
 Currency(symbol="$", name="US Dollar", code="USD")  # type checker knows these kwargs
-Currency(symbol="$")                                  # type checker flags missing args
+Currency(symbol="$")  # type checker flags missing args
 ```
 
 ### No-data enums
@@ -154,6 +158,7 @@ Currency(symbol="$")                                  # type checker flags missi
 ```py
 class Direction(DataEnum):
     __members__ = ("NORTH", "SOUTH", "EAST", "WEST")
+
 
 Direction.NORTH = Direction()
 Direction.SOUTH = Direction()
@@ -191,6 +196,7 @@ All declared members must be assigned before use:
 class Color(DataEnum):
     __members__ = ("RED", "BLUE")
     name: str
+
 
 Color.RED = Color(name="Red")
 Color.get("RED")  # raises ConfigurationError (BLUE not yet assigned)

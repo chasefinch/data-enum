@@ -1,3 +1,4 @@
+# Copyright (C) 2021 Chase Finch
 """Define metadata for DataEnum."""
 
 from pathlib import Path

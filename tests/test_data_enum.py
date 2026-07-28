@@ -1,3 +1,4 @@
+# Copyright (C) 2021 Chase Finch
 """Tests for DataEnum."""
 
 import pickle

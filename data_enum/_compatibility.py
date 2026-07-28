@@ -1,3 +1,4 @@
+# Copyright (C) 2021 Chase Finch
 """Back-compatibility shims for supported Python versions.
 
 `typing.override` only exists on Python 3.12+, but this package supports

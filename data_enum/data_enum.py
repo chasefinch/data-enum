@@ -1,3 +1,4 @@
+# Copyright (C) 2021 Chase Finch
 """An alternative to the built-in Python `enum` implementation."""
 
 from __future__ import annotations
