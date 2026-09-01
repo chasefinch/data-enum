@@ -37,6 +37,18 @@ class MemberDoesNotExistError(Exception):
 class DataEnumMeta(type):
     """Metaclass for DataEnum that handles member registration and lookup."""
 
+    _data_attrs: dict[str, type]
+    _unique_attrs: frozenset[str]
+    _default_attrs: dict[str, Any]
+    _unique_together_groups: dict[str, tuple[str, ...]]
+    _unique_together_by_attrs: dict[frozenset[str], str]
+    _members_decl: tuple[str, ...]
+    _member_map: dict[str, DataEnum]
+    _unique_indexes: dict[str, dict[Any, DataEnum]]
+    _unique_together_indexes: dict[str, dict[tuple[Any, ...], DataEnum]]
+    _is_complete: bool
+    _instances_created: int
+
     def __new__(
         mcs,
         name: str,
@@ -229,6 +241,8 @@ class DataEnum(metaclass=DataEnumMeta):  # noqa: WPS338
     """An alternative to the built-in Python `enum` implementation."""
 
     __slots__ = ()
+
+    _name: str
 
     def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
         """Initialize a DataEnum member."""
