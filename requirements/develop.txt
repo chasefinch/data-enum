@@ -8,6 +8,6 @@ docformatter==1.7.8
 
 wemake-python-styleguide==1.8.1
 
-ruff==0.16.7
+ruff==0.16.8
 
 ty==0.0.80
