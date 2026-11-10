@@ -10,4 +10,4 @@ wemake-python-styleguide==1.8.1
 
 ruff==0.17.3
 
-ty==0.0.95
+ty==0.0.99
