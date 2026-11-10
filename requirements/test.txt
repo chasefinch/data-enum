@@ -1,6 +1,6 @@
 -r base.txt
 
-coverage==7.17.0
+coverage==7.17.2
 pytest==9.2.0
 
 setuptools==84.2.1
